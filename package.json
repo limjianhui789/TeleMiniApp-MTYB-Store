@@ -6,6 +6,7 @@
   "homepage": "https://limjianhui789.github.io/TeleMiniApp-MTYB-Store",
   "scripts": {
     "deploy": "gh-pages -d dist",
+    "deploy:vercel": "vercel --prod",
     "dev": "vite",
     "dev:https": "cross-env HTTPS=true vite",
     "build": "tsc --noEmit && vite build",
