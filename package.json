@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "homepage": "https://YOUR_USERNAME.github.io/YOUR_REPO_NAME",
+  "homepage": "https://limjianhui789.github.io/TeleMiniApp-MTYB-Store",
   "scripts": {
     "deploy": "gh-pages -d dist",
     "dev": "vite",
