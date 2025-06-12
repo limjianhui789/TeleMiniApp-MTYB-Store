@@ -1,0 +1,86 @@
+/* ============================================================================
+   MTYB Virtual Goods Platform - Notification Toast Styles
+   ============================================================================ */
+
+.notification-container {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.notification-container--top {
+  top: 16px;
+}
+
+.notification-container--bottom {
+  bottom: 16px;
+}
+
+.notification-toast {
+  margin-bottom: 8px;
+  pointer-events: auto;
+  transform: translateX(0);
+  opacity: 1;
+  transition: all 0.3s ease-in-out;
+}
+
+.notification-toast.hidden {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.notification-toast.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Type-specific styling */
+.notification-toast--success {
+  border-left: 4px solid #4CAF50;
+}
+
+.notification-toast--error {
+  border-left: 4px solid #F44336;
+}
+
+.notification-toast--warning {
+  border-left: 4px solid #FF9800;
+}
+
+.notification-toast--info {
+  border-left: 4px solid #2196F3;
+}
+
+/* Animation for new notifications */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.notification-toast.visible {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .notification-container {
+    left: 8px;
+    right: 8px;
+  }
+  
+  .notification-container--top {
+    top: 8px;
+  }
+  
+  .notification-container--bottom {
+    bottom: 8px;
+  }
+}

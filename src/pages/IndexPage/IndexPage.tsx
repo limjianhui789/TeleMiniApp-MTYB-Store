@@ -11,6 +11,18 @@ export const IndexPage: FC = () => {
     <Page back={false}>
       <List>
         <Section
+          header="MTYB Platform"
+          footer="Virtual goods platform with plugin-based architecture"
+        >
+          <Link to="/demo">
+            <Cell
+              subtitle="Explore the core infrastructure and components"
+            >
+              🚀 Platform Demo
+            </Cell>
+          </Link>
+        </Section>
+        <Section
           header="Features"
           footer="You can use these pages to learn more about features, provided by Telegram Mini Apps and other useful projects"
         >

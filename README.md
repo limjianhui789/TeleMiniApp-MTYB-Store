@@ -1,26 +1,103 @@
-# Telegram Mini Apps React Template
+# MTYB Virtual Goods Platform
 
-This template demonstrates how developers can implement a single-page
-application on the Telegram Mini Apps platform using the following technologies
-and libraries:
+A plugin-based virtual goods purchasing platform built as a Telegram Mini App. This platform supports various types of virtual products through a flexible plugin architecture, with integrated Curlec payment gateway for seamless transactions.
 
-- [React](https://react.dev/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [TON Connect](https://docs.ton.org/develop/dapps/ton-connect/overview)
-- [@telegram-apps SDK](https://docs.telegram-mini-apps.com/packages/telegram-apps-sdk/2-x)
-- [Telegram UI](https://github.com/Telegram-Mini-Apps/TelegramUI)
-- [Vite](https://vitejs.dev/)
+## 🚀 Features
 
-> The template was created using [npm](https://www.npmjs.com/). Therefore, it is
-> required to use it for this project as well. Using other package managers, you
-> will receive a corresponding error.
+- 🔌 **Plugin Architecture** - Extensible system for different product types
+- 💳 **Curlec Payment Integration** - Secure payment processing
+- 🤖 **Automated Delivery** - Automatic order fulfillment after payment
+- 📱 **Telegram Native** - Full Telegram Mini App integration
+- 🔐 **Secure & Reliable** - Complete order management and payment verification
 
-## Install Dependencies
+## 🛠️ Technology Stack
 
-If you have just cloned this template, you should install the project
-dependencies using the command:
+- [React](https://react.dev/) - Frontend framework
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
+- [Curlec Payment Gateway](https://curlec.com/) - Payment processing
+- [@telegram-apps SDK](https://docs.telegram-mini-apps.com/packages/telegram-apps-sdk/2-x) - Telegram integration
+- [Telegram UI](https://github.com/Telegram-Mini-Apps/TelegramUI) - Native UI components
+- [Vite](https://vitejs.dev/) - Build tool
 
-```Bash
+## 📋 Development Status
+
+### ✅ Phase 1: Basic Infrastructure (COMPLETED)
+- [x] Project structure and TypeScript configuration
+- [x] Core type definitions system (User, Product, Order, Payment, Plugin types)
+- [x] Plugin interface specifications and base classes
+- [x] Basic component library extensions (LoadingSpinner, ErrorBoundary, Notifications)
+- [x] Environment configuration management
+- [x] Logging and validation utilities
+- [x] Event system for component communication
+- [x] Configuration management system
+
+### ✅ Phase 2: Plugin System Core (COMPLETED)
+- [x] PluginManager core class implementation
+- [x] Plugin registration and discovery mechanism
+- [x] Plugin lifecycle management (enable, disable, reload)
+- [x] Plugin health monitoring and error handling
+- [x] Plugin event system for communication
+- [x] Plugin development tools and testing utilities
+- [x] Demo plugin implementation
+- [x] Interactive plugin testing in demo page
+
+### 🔄 Phase 3: Payment Integration (NEXT)
+- [ ] Curlec payment gateway integration
+- [ ] Order management system with plugin integration
+- [ ] Payment security mechanisms and webhook handling
+- [ ] Payment flow integration with plugin system
+
+### ⏳ Upcoming Phases
+- **Phase 4**: Product Management System
+- **Phase 5**: Example Plugin Development (VPN, Netflix, Steam)
+- **Phase 6**: UI/UX Enhancement
+
+## 🎯 Demo
+
+Visit `/demo` in the application to explore:
+- ✅ Core infrastructure components
+- ✅ Type system demonstration
+- ✅ Utility classes (Logger, Validator, Config Manager)
+- ✅ Component testing (Loading, Error Handling, Notifications)
+- ✅ Environment configuration display
+- ✅ **NEW**: Plugin system testing and demonstration
+- ✅ **NEW**: Live plugin registration and execution
+- ✅ **NEW**: Plugin health monitoring and error handling
+
+## 📋 Supported Product Types
+
+The platform supports various virtual goods through plugins:
+
+- **VPN Services** - Automatic account creation via API integration
+- **Streaming Accounts** - Email-based account delivery (Netflix, etc.)
+- **Gaming Products** - KeyAuth integration for license keys (Steam, etc.)
+- **Software Licenses** - Custom license key generation
+- **Custom Products** - Extensible plugin system for any virtual good
+
+## 📚 Documentation
+
+- [Architecture Design](docs/ARCHITECTURE.md) - System architecture and design principles
+- [Development Plan](docs/DEVELOPMENT_PLAN.md) - Detailed development roadmap
+- [Plugin Development Guide](docs/PLUGIN_DEVELOPMENT_GUIDE.md) - How to create custom plugins
+- [Phase 1 Summary](docs/PHASE1_COMPLETION_SUMMARY.md) - Basic infrastructure completion
+- [Phase 2 Summary](docs/PHASE2_COMPLETION_SUMMARY.md) - Plugin system core completion
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- Telegram Bot created via [@BotFather](https://t.me/botfather)
+- Curlec payment gateway account
+
+### Installation
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd mtyb-shop
+
+# Install dependencies
 npm install
 ```
 

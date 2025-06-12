@@ -1,0 +1,50 @@
+/* ============================================================================
+   MTYB Virtual Goods Platform - Loading Spinner Styles
+   ============================================================================ */
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.loading-spinner--small {
+  gap: 8px;
+}
+
+.loading-spinner--medium {
+  gap: 12px;
+}
+
+.loading-spinner--large {
+  gap: 16px;
+}
+
+.loading-spinner__message {
+  color: var(--tg-theme-text-color);
+  font-size: 14px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.loading-spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-spinner-overlay .loading-spinner {
+  background-color: var(--tg-theme-bg-color);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
