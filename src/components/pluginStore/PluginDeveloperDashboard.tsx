@@ -10,6 +10,7 @@ import {
   PluginSubmission,
   PluginStoreStatus,
 } from '../../types/pluginStore';
+import { pluginStoreService, pluginAnalyticsService } from '../../services/plugin';
 
 interface PluginDeveloperDashboardProps {
   className?: string;
@@ -24,26 +25,10 @@ export const PluginDeveloperDashboard: React.FC<PluginDeveloperDashboardProps> =
     'overview'
   );
 
-  // Mock data fetching functions
+  // 使用新的插件服务获取开发者数据
   const fetchDeveloperStats = useCallback(async (): Promise<PluginDeveloperStats> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    return {
-      totalPlugins: 8,
-      publishedPlugins: 6,
-      totalDownloads: 45623,
-      totalRevenue: 12567.89,
-      averageRating: 4.6,
-      totalReviews: 342,
-      monthlyStats: [
-        { month: '2024-01', downloads: 3421, revenue: 1256.78, newReviews: 23 },
-        { month: '2024-02', downloads: 4123, revenue: 1534.92, newReviews: 31 },
-        { month: '2024-03', downloads: 3876, revenue: 1423.65, newReviews: 28 },
-        { month: '2024-04', downloads: 4567, revenue: 1678.34, newReviews: 35 },
-        { month: '2024-05', downloads: 5234, revenue: 1987.45, newReviews: 42 },
-        { month: '2024-06', downloads: 4987, revenue: 1876.23, newReviews: 38 },
-      ],
-    };
+    const currentUserId = 'current-user'; // 实际应该从认证系统获取
+    return await pluginStoreService.getDeveloperStats(currentUserId);
   }, []);
 
   const fetchMyPlugins = useCallback(async (): Promise<PluginStoreItem[]> => {

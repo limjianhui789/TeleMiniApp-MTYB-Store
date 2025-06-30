@@ -1,0 +1,607 @@
+// ============================================================================
+// Prisma Schema for MTYB Platform
+// Database: PostgreSQL with UUID support
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// Enums
+// ============================================================================
+
+enum UserRole {
+  user
+  developer
+  moderator
+  admin
+}
+
+enum UserStatus {
+  active
+  suspended
+  banned
+  pending_verification
+}
+
+enum PluginStatus {
+  draft
+  pending_review
+  under_review
+  approved
+  published
+  rejected
+  suspended
+  deprecated
+}
+
+enum PluginCategory {
+  vpn
+  streaming
+  gaming
+  software
+  productivity
+  security
+  entertainment
+  utilities
+}
+
+enum PluginPricingType {
+  free
+  freemium
+  paid
+  subscription
+}
+
+enum InstallationStatus {
+  installing
+  installed
+  updating
+  failed
+  uninstalling
+  disabled
+}
+
+enum OrderStatus {
+  pending
+  processing
+  completed
+  failed
+  cancelled
+  refunded
+}
+
+enum PaymentStatus {
+  pending
+  authorized
+  captured
+  failed
+  cancelled
+  refunded
+}
+
+enum ReviewStatus {
+  published
+  pending
+  hidden
+  flagged
+}
+
+enum AnalyticsEventType {
+  plugin_view
+  plugin_install
+  plugin_uninstall
+  plugin_execute
+  plugin_error
+  payment_success
+  user_action
+}
+
+// ============================================================================
+// Core Models
+// ============================================================================
+
+model User {
+  id                String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  telegramId        BigInt     @unique @map("telegram_id")
+  username          String?    @db.VarChar(255)
+  firstName         String?    @map("first_name") @db.VarChar(255)
+  lastName          String?    @map("last_name") @db.VarChar(255)
+  email             String?    @unique @db.VarChar(255)
+  phone             String?    @db.VarChar(50)
+  avatarUrl         String?    @map("avatar_url")
+  role              UserRole   @default(user)
+  status            UserStatus @default(active)
+  emailVerified     Boolean    @default(false) @map("email_verified")
+  phoneVerified     Boolean    @default(false) @map("phone_verified")
+  twoFactorEnabled  Boolean    @default(false) @map("two_factor_enabled")
+  languageCode      String     @default("en") @map("language_code") @db.VarChar(10)
+  timezone          String     @default("UTC") @db.VarChar(50)
+  lastActiveAt      DateTime?  @map("last_active_at") @db.Timestamptz(6)
+  createdAt         DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt         DateTime?  @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  profile           UserProfile?
+  sessions          UserSession[]
+  plugins           Plugin[]
+  installations     PluginInstallation[]
+  reviews           PluginReview[]
+  orders            Order[]
+  earnings          DeveloperEarning[]
+  payouts           DeveloperPayout[]
+  analyticsEvents   AnalyticsEvent[]
+  auditLogs         AuditLog[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  userId                  String  @id @map("user_id") @db.Uuid
+  bio                     String?
+  websiteUrl              String? @map("website_url")
+  githubUrl               String? @map("github_url")
+  twitterHandle           String? @map("twitter_handle") @db.VarChar(100)
+  company                 String? @db.VarChar(255)
+  location                String? @db.VarChar(255)
+  notificationPreferences Json    @default("{}") @map("notification_preferences")
+  privacySettings         Json    @default("{}") @map("privacy_settings")
+  developerSettings       Json    @default("{}") @map("developer_settings")
+  createdAt               DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt               DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model UserSession {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  sessionToken String    @unique @map("session_token") @db.VarChar(255)
+  refreshToken String?   @unique @map("refresh_token") @db.VarChar(255)
+  deviceInfo   Json?     @map("device_info")
+  ipAddress    String?   @map("ip_address") @db.Inet
+  userAgent    String?   @map("user_agent")
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastUsedAt   DateTime  @default(now()) @map("last_used_at") @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model Plugin {
+  id                   String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                 String             @unique @db.VarChar(255)
+  displayName          String             @map("display_name") @db.VarChar(255)
+  shortDescription     String?            @map("short_description") @db.VarChar(500)
+  description          String?
+  authorId             String             @map("author_id") @db.Uuid
+  category             PluginCategory
+  tags                 String[]           @default([])
+  version              String             @db.VarChar(50)
+  latestVersion        String?            @map("latest_version") @db.VarChar(50)
+  status               PluginStatus       @default(draft)
+  pricingType          PluginPricingType  @default(free) @map("pricing_type")
+  price                Decimal            @default(0.00) @db.Decimal(10, 2)
+  currency             String             @default("USD") @db.VarChar(3)
+  iconUrl              String?            @map("icon_url")
+  bannerUrl            String?            @map("banner_url")
+  screenshots          String[]           @default([])
+  homepageUrl          String?            @map("homepage_url")
+  repositoryUrl        String?            @map("repository_url")
+  documentationUrl     String?            @map("documentation_url")
+  supportEmail         String?            @map("support_email") @db.VarChar(255)
+  license              String             @default("MIT") @db.VarChar(100)
+  minPlatformVersion   String?            @map("min_platform_version") @db.VarChar(50)
+  supportedDevices     String[]           @default([]) @map("supported_devices")
+  requiredPermissions  String[]           @default([]) @map("required_permissions")
+  manifestJson         Json?              @map("manifest_json")
+  packageUrl           String?            @map("package_url")
+  packageSize          Int?               @map("package_size")
+  checksumSha256       String?            @map("checksum_sha256") @db.VarChar(64)
+  downloadCount        Int                @default(0) @map("download_count")
+  activeInstallCount   Int                @default(0) @map("active_install_count")
+  ratingAverage        Decimal            @default(0.00) @map("rating_average") @db.Decimal(3, 2)
+  ratingCount          Int                @default(0) @map("rating_count")
+  reviewCount          Int                @default(0) @map("review_count")
+  lastUpdateCheck      DateTime?          @map("last_update_check") @db.Timestamptz(6)
+  publishedAt          DateTime?          @map("published_at") @db.Timestamptz(6)
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt            DateTime?          @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  author               User                @relation(fields: [authorId], references: [id])
+  versions             PluginVersion[]
+  dependencies         PluginDependency[]  @relation("PluginDependencies")
+  dependents           PluginDependency[]  @relation("DependencyPlugin")
+  installations        PluginInstallation[]
+  reviews              PluginReview[]
+  orderItems           OrderItem[]
+  earnings             DeveloperEarning[]
+  analyticsEvents      AnalyticsEvent[]
+  usageStats           PluginUsageStat[]
+
+  @@map("plugins")
+}
+
+model PluginVersion {
+  id             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  pluginId       String   @map("plugin_id") @db.Uuid
+  version        String   @db.VarChar(50)
+  changelog      String?
+  releaseNotes   String?  @map("release_notes")
+  packageUrl     String?  @map("package_url")
+  packageSize    Int?     @map("package_size")
+  checksumSha256 String?  @map("checksum_sha256") @db.VarChar(64)
+  isStable       Boolean  @default(true) @map("is_stable")
+  isLatest       Boolean  @default(false) @map("is_latest")
+  downloadCount  Int      @default(0) @map("download_count")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  plugin Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+  @@unique([pluginId, version])
+  @@map("plugin_versions")
+}
+
+model PluginDependency {
+  id                 String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  pluginId           String  @map("plugin_id") @db.Uuid
+  dependencyPluginId String  @map("dependency_plugin_id") @db.Uuid
+  minVersion         String? @map("min_version") @db.VarChar(50)
+  maxVersion         String? @map("max_version") @db.VarChar(50)
+  isOptional         Boolean @default(false) @map("is_optional")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  plugin           Plugin @relation("PluginDependencies", fields: [pluginId], references: [id], onDelete: Cascade)
+  dependencyPlugin Plugin @relation("DependencyPlugin", fields: [dependencyPluginId], references: [id])
+
+  @@unique([pluginId, dependencyPluginId])
+  @@map("plugin_dependencies")
+}
+
+model PluginInstallation {
+  id             String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId         String             @map("user_id") @db.Uuid
+  pluginId       String             @map("plugin_id") @db.Uuid
+  version        String             @db.VarChar(50)
+  status         InstallationStatus @default(installing)
+  configData     Json               @default("{}") @map("config_data")
+  enabled        Boolean            @default(true)
+  autoUpdate     Boolean            @default(true) @map("auto_update")
+  licenseKey     String?            @map("license_key") @db.VarChar(255)
+  subscriptionId String?            @map("subscription_id") @db.Uuid
+  installedAt    DateTime           @default(now()) @map("installed_at") @db.Timestamptz(6)
+  lastUsedAt     DateTime?          @map("last_used_at") @db.Timestamptz(6)
+  updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plugin  Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  reviews PluginReview[]
+
+  @@unique([userId, pluginId])
+  @@map("plugin_installations")
+}
+
+model PluginReview {
+  id               String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  pluginId         String       @map("plugin_id") @db.Uuid
+  userId           String       @map("user_id") @db.Uuid
+  installationId   String?      @map("installation_id") @db.Uuid
+  rating           Int          @db.SmallInt
+  title            String?      @db.VarChar(255)
+  comment          String?
+  pros             String[]     @default([])
+  cons             String[]     @default([])
+  versionReviewed  String?      @map("version_reviewed") @db.VarChar(50)
+  status           ReviewStatus @default(published)
+  helpfulCount     Int          @default(0) @map("helpful_count")
+  unhelpfulCount   Int          @default(0) @map("unhelpful_count")
+  verifiedPurchase Boolean      @default(false) @map("verified_purchase")
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  plugin       Plugin              @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  installation PluginInstallation? @relation(fields: [installationId], references: [id])
+  votes        PluginReviewVote[]
+
+  @@unique([pluginId, userId])
+  @@map("plugin_reviews")
+}
+
+model PluginReviewVote {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  reviewId  String   @map("review_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  isHelpful Boolean  @map("is_helpful")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  review PluginReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId])
+  @@map("plugin_review_votes")
+}
+
+// ============================================================================
+// Order and Payment Models
+// ============================================================================
+
+model Order {
+  id              String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId          String      @map("user_id") @db.Uuid
+  orderNumber     String      @unique @map("order_number") @db.VarChar(50)
+  status          OrderStatus @default(pending)
+  totalAmount     Decimal     @map("total_amount") @db.Decimal(10, 2)
+  currency        String      @default("USD") @db.VarChar(3)
+  paymentMethod   String?     @map("payment_method") @db.VarChar(50)
+  billingAddress  Json?       @map("billing_address")
+  taxAmount       Decimal     @default(0.00) @map("tax_amount") @db.Decimal(10, 2)
+  discountAmount  Decimal     @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
+  platformFee     Decimal     @default(0.00) @map("platform_fee") @db.Decimal(10, 2)
+  metadata        Json        @default("{}")
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  completedAt     DateTime?   @map("completed_at") @db.Timestamptz(6)
+  cancelledAt     DateTime?   @map("cancelled_at") @db.Timestamptz(6)
+
+  // Relations
+  user     User        @relation(fields: [userId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
+  earnings DeveloperEarning[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                   String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  orderId              String   @map("order_id") @db.Uuid
+  pluginId             String   @map("plugin_id") @db.Uuid
+  pluginName           String   @map("plugin_name") @db.VarChar(255)
+  pluginVersion        String   @map("plugin_version") @db.VarChar(50)
+  quantity             Int      @default(1)
+  unitPrice            Decimal  @map("unit_price") @db.Decimal(10, 2)
+  totalPrice           Decimal  @map("total_price") @db.Decimal(10, 2)
+  licenseType          String?  @map("license_type") @db.VarChar(50)
+  licenseDurationMonths Int?    @map("license_duration_months")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  plugin Plugin @relation(fields: [pluginId], references: [id])
+
+  @@map("order_items")
+}
+
+model Payment {
+  id                    String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  orderId               String        @map("order_id") @db.Uuid
+  paymentIntentId       String?       @unique @map("payment_intent_id") @db.VarChar(255)
+  amount                Decimal       @db.Decimal(10, 2)
+  currency              String        @db.VarChar(3)
+  status                PaymentStatus @default(pending)
+  paymentMethod         String?       @map("payment_method") @db.VarChar(50)
+  gateway               String        @db.VarChar(50)
+  gatewayTransactionId  String?       @map("gateway_transaction_id") @db.VarChar(255)
+  gatewayResponse       Json?         @map("gateway_response")
+  refundAmount          Decimal       @default(0.00) @map("refund_amount") @db.Decimal(10, 2)
+  failureReason         String?       @map("failure_reason")
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  authorizedAt          DateTime?     @map("authorized_at") @db.Timestamptz(6)
+  capturedAt            DateTime?     @map("captured_at") @db.Timestamptz(6)
+  failedAt              DateTime?     @map("failed_at") @db.Timestamptz(6)
+
+  // Relations
+  order   Order    @relation(fields: [orderId], references: [id])
+  refunds Refund[]
+
+  @@map("payments")
+}
+
+model Refund {
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  paymentId       String    @map("payment_id") @db.Uuid
+  amount          Decimal   @db.Decimal(10, 2)
+  reason          String?
+  gatewayRefundId String?   @map("gateway_refund_id") @db.VarChar(255)
+  status          String    @default("pending") @db.VarChar(50)
+  processedAt     DateTime? @map("processed_at") @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  @@map("refunds")
+}
+
+// ============================================================================
+// Analytics and Monitoring Models
+// ============================================================================
+
+model AnalyticsEvent {
+  id        String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId    String?             @map("user_id") @db.Uuid
+  sessionId String?             @map("session_id") @db.Uuid
+  eventType AnalyticsEventType  @map("event_type")
+  pluginId  String?             @map("plugin_id") @db.Uuid
+  eventData Json                @default("{}") @map("event_data")
+  ipAddress String?             @map("ip_address") @db.Inet
+  userAgent String?             @map("user_agent")
+  referrer  String?
+  timestamp DateTime            @default(now()) @db.Timestamptz(6)
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  user   User?   @relation(fields: [userId], references: [id])
+  plugin Plugin? @relation(fields: [pluginId], references: [id])
+
+  @@map("analytics_events")
+}
+
+model PluginUsageStat {
+  id                 String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  pluginId           String   @map("plugin_id") @db.Uuid
+  date               DateTime @db.Date
+  totalExecutions    Int      @default(0) @map("total_executions")
+  uniqueUsers        Int      @default(0) @map("unique_users")
+  errorCount         Int      @default(0) @map("error_count")
+  avgExecutionTimeMs Int      @default(0) @map("avg_execution_time_ms")
+  totalRevenue       Decimal  @default(0.00) @map("total_revenue") @db.Decimal(10, 2)
+  newInstallations   Int      @default(0) @map("new_installations")
+  uninstallations    Int      @default(0)
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  plugin Plugin @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+
+  @@unique([pluginId, date])
+  @@map("plugin_usage_stats")
+}
+
+model PlatformMetric {
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  date          DateTime @unique @db.Date
+  totalUsers    Int      @default(0) @map("total_users")
+  activeUsers   Int      @default(0) @map("active_users")
+  newUsers      Int      @default(0) @map("new_users")
+  totalPlugins  Int      @default(0) @map("total_plugins")
+  activePlugins Int      @default(0) @map("active_plugins")
+  newPlugins    Int      @default(0) @map("new_plugins")
+  totalDownloads Int     @default(0) @map("total_downloads")
+  totalRevenue  Decimal  @default(0.00) @map("total_revenue") @db.Decimal(10, 2)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("platform_metrics")
+}
+
+// ============================================================================
+// Developer Earnings Models
+// ============================================================================
+
+model DeveloperEarning {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  developerId String   @map("developer_id") @db.Uuid
+  pluginId    String   @map("plugin_id") @db.Uuid
+  orderId     String   @map("order_id") @db.Uuid
+  grossAmount Decimal  @map("gross_amount") @db.Decimal(10, 2)
+  platformFee Decimal  @map("platform_fee") @db.Decimal(10, 2)
+  netAmount   Decimal  @map("net_amount") @db.Decimal(10, 2)
+  currency    String   @db.VarChar(3)
+  earningDate DateTime @map("earning_date") @db.Date
+  payoutId    String?  @map("payout_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  developer User             @relation(fields: [developerId], references: [id])
+  plugin    Plugin           @relation(fields: [pluginId], references: [id])
+  order     Order            @relation(fields: [orderId], references: [id])
+  payout    DeveloperPayout? @relation(fields: [payoutId], references: [id])
+
+  @@map("developer_earnings")
+}
+
+model DeveloperPayout {
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  developerId   String   @map("developer_id") @db.Uuid
+  totalAmount   Decimal  @map("total_amount") @db.Decimal(10, 2)
+  currency      String   @db.VarChar(3)
+  paymentMethod String?  @map("payment_method") @db.VarChar(50)
+  paymentDetails Json?   @map("payment_details")
+  status        String   @default("pending") @db.VarChar(50)
+  periodStart   DateTime @map("period_start") @db.Date
+  periodEnd     DateTime @map("period_end") @db.Date
+  processedAt   DateTime? @map("processed_at") @db.Timestamptz(6)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  developer User                     @relation(fields: [developerId], references: [id])
+  items     DeveloperPayoutItem[]
+  earnings  DeveloperEarning[]
+
+  @@map("developer_payouts")
+}
+
+model DeveloperPayoutItem {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  payoutId  String   @map("payout_id") @db.Uuid
+  earningId String   @map("earning_id") @db.Uuid
+  amount    Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  payout  DeveloperPayout  @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+  earning DeveloperEarning @relation(fields: [earningId], references: [id])
+
+  @@map("developer_payout_items")
+}
+
+// ============================================================================
+// System Configuration and Audit
+// ============================================================================
+
+model SystemConfig {
+  key         String   @id @db.VarChar(255)
+  value       Json
+  description String?
+  isPublic    Boolean  @default(false) @map("is_public")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("system_config")
+}
+
+model AuditLog {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId       String?   @map("user_id") @db.Uuid
+  action       String    @db.VarChar(255)
+  resourceType String?   @map("resource_type") @db.VarChar(100)
+  resourceId   String?   @map("resource_id") @db.VarChar(255)
+  oldValues    Json?     @map("old_values")
+  newValues    Json?     @map("new_values")
+  ipAddress    String?   @map("ip_address") @db.Inet
+  userAgent    String?   @map("user_agent")
+  timestamp    DateTime  @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model ApiRateLimit {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId       String?   @map("user_id") @db.Uuid
+  ipAddress    String?   @map("ip_address") @db.Inet
+  endpoint     String    @db.VarChar(255)
+  requestCount Int       @default(1) @map("request_count")
+  windowStart  DateTime  @default(now()) @map("window_start") @db.Timestamptz(6)
+  blockedUntil DateTime? @map("blocked_until") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("api_rate_limits")
+}

@@ -9,6 +9,7 @@ import {
   PluginSortBy,
   PluginCategory,
 } from '../../types/pluginStore';
+import { pluginStoreService } from '../../services/plugin';
 
 interface PluginStoreProps {
   className?: string;
@@ -24,178 +25,13 @@ export const PluginStore: React.FC<PluginStoreProps> = ({ className = '' }) => {
   });
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  // Mock data fetching functions
+  // 使用新的插件商店服务
   const fetchFeaturedPlugins = useCallback(async (): Promise<PluginStoreItem[]> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    return [
-      {
-        id: 'vpn-premium',
-        name: 'vpn-premium',
-        displayName: 'VPN Premium Manager',
-        shortDescription: 'Advanced VPN account management with premium features',
-        description:
-          'A comprehensive VPN management plugin with advanced features including multi-region support, bandwidth monitoring, and automated failover.',
-        version: '2.1.0',
-        latestVersion: '2.1.0',
-        author: {
-          id: 'mtyb-team',
-          name: 'MTYB Team',
-          email: 'plugins@mtyb.shop',
-          verified: true,
-          publishedPlugins: 12,
-          totalDownloads: 45623,
-          averageRating: 4.8,
-          joinedAt: new Date('2023-01-15'),
-        },
-        category: 'vpn' as any,
-        tags: ['vpn', 'security', 'premium', 'automation'],
-        icon: '🔒',
-        screenshots: [],
-        pricing: {
-          type: 'freemium',
-          price: 9.99,
-          currency: 'USD',
-        },
-        stats: {
-          downloads: 12543,
-          activeInstalls: 8932,
-          rating: 4.8,
-          reviewCount: 234,
-          lastWeekDownloads: 892,
-          lastMonthDownloads: 3421,
-          popularityScore: 95,
-        },
-        compatibility: {
-          minPlatformVersion: '1.0.0',
-          supportedDevices: ['mobile', 'desktop'],
-          requiredFeatures: [],
-          dependencies: [],
-        },
-        metadata: {
-          size: 2048576,
-          downloadUrl: '',
-          checksumSha256: '',
-          changelog: [],
-          license: 'MIT',
-        },
-        createdAt: new Date('2023-08-15'),
-        updatedAt: new Date('2024-01-10'),
-        publishedAt: new Date('2023-08-20'),
-        status: 'published' as any,
-      },
-      {
-        id: 'streaming-pro',
-        name: 'streaming-pro',
-        displayName: 'Streaming Account Pro',
-        shortDescription: 'Professional streaming service account manager',
-        description:
-          'Manage multiple streaming service accounts with advanced sharing features and usage analytics.',
-        version: '1.5.2',
-        latestVersion: '1.5.2',
-        author: {
-          id: 'streamdev',
-          name: 'StreamDev Studio',
-          email: 'info@streamdev.com',
-          verified: true,
-          publishedPlugins: 8,
-          totalDownloads: 32189,
-          averageRating: 4.6,
-          joinedAt: new Date('2023-03-10'),
-        },
-        category: 'streaming' as any,
-        tags: ['streaming', 'entertainment', 'sharing', 'analytics'],
-        icon: '📺',
-        screenshots: [],
-        pricing: {
-          type: 'paid',
-          price: 14.99,
-          currency: 'USD',
-        },
-        stats: {
-          downloads: 8732,
-          activeInstalls: 6421,
-          rating: 4.6,
-          reviewCount: 187,
-          lastWeekDownloads: 634,
-          lastMonthDownloads: 2341,
-          popularityScore: 87,
-        },
-        compatibility: {
-          minPlatformVersion: '1.0.0',
-          supportedDevices: ['mobile', 'desktop', 'tablet'],
-          requiredFeatures: [],
-          dependencies: [],
-        },
-        metadata: {
-          size: 1536000,
-          downloadUrl: '',
-          checksumSha256: '',
-          changelog: [],
-          license: 'Commercial',
-        },
-        createdAt: new Date('2023-09-05'),
-        updatedAt: new Date('2024-01-05'),
-        publishedAt: new Date('2023-09-10'),
-        status: 'published' as any,
-      },
-      {
-        id: 'security-scanner-free',
-        name: 'security-scanner-free',
-        displayName: 'Security Scanner',
-        shortDescription: 'Free security vulnerability scanner',
-        description:
-          'Basic security scanning for your digital assets with essential vulnerability detection.',
-        version: '3.0.1',
-        latestVersion: '3.0.1',
-        author: {
-          id: 'security-corp',
-          name: 'SecureCorp',
-          email: 'plugins@securecorp.com',
-          verified: true,
-          publishedPlugins: 15,
-          totalDownloads: 67892,
-          averageRating: 4.4,
-          joinedAt: new Date('2022-11-20'),
-        },
-        category: 'software' as any,
-        tags: ['security', 'scanner', 'free', 'vulnerability'],
-        icon: '🛡️',
-        screenshots: [],
-        pricing: {
-          type: 'free',
-        },
-        stats: {
-          downloads: 15643,
-          activeInstalls: 12987,
-          rating: 4.4,
-          reviewCount: 412,
-          lastWeekDownloads: 1243,
-          lastMonthDownloads: 4532,
-          popularityScore: 92,
-        },
-        compatibility: {
-          minPlatformVersion: '1.0.0',
-          supportedDevices: ['mobile', 'desktop'],
-          requiredFeatures: [],
-          dependencies: [],
-        },
-        metadata: {
-          size: 3072000,
-          downloadUrl: '',
-          checksumSha256: '',
-          changelog: [],
-          license: 'Apache-2.0',
-        },
-        createdAt: new Date('2023-06-12'),
-        updatedAt: new Date('2024-01-08'),
-        publishedAt: new Date('2023-06-15'),
-        status: 'published' as any,
-      },
-    ];
+    return await pluginStoreService.getFeaturedPlugins();
   }, []);
 
   const fetchCategories = useCallback(async (): Promise<PluginCategory[]> => {
+    // 模拟分类数据（实际应该从服务获取）
     await new Promise(resolve => setTimeout(resolve, 300));
 
     return [
@@ -639,9 +475,10 @@ const PluginCard: React.FC<PluginCardProps> = ({ plugin }) => {
   const handleInstall = async () => {
     setIsInstalling(true);
     try {
-      // Simulate installation
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Installing plugin:', plugin.id);
+      await pluginStoreService.installPlugin(plugin.id);
+      console.log('Plugin installed successfully:', plugin.id);
+    } catch (error) {
+      console.error('Failed to install plugin:', error);
     } finally {
       setIsInstalling(false);
     }
