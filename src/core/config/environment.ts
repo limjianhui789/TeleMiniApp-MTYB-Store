@@ -7,34 +7,34 @@ export interface EnvironmentConfig {
   NODE_ENV: 'development' | 'production' | 'test';
   APP_NAME: string;
   APP_VERSION: string;
-  
+
   // API Configuration
   API_BASE_URL: string;
   API_TIMEOUT: number;
-  
+
   // Payment Gateway
   CURLEC_BASE_URL: string;
   CURLEC_PUBLIC_KEY: string;
   CURLEC_WEBHOOK_SECRET: string;
-  
+
   // Telegram
   TELEGRAM_BOT_TOKEN: string;
   TELEGRAM_WEBHOOK_URL: string;
-  
+
   // Feature Flags
   ENABLE_PLUGIN_SANDBOX: boolean;
   ENABLE_ORDER_NOTIFICATIONS: boolean;
   ENABLE_ANALYTICS: boolean;
   ENABLE_DEBUG_MODE: boolean;
   ENABLE_MOCK_PAYMENTS: boolean;
-  
+
   // Storage
   STORAGE_PREFIX: string;
-  
+
   // Security
   ENCRYPTION_KEY: string;
   JWT_SECRET: string;
-  
+
   // Monitoring
   SENTRY_DSN?: string;
   LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error';
@@ -51,7 +51,9 @@ class EnvironmentManager {
   private loadEnvironmentConfig(): EnvironmentConfig {
     return {
       // Application
-      NODE_ENV: (import.meta.env.MODE === 'development' ? 'development' : 'production') as EnvironmentConfig['NODE_ENV'],
+      NODE_ENV: (import.meta.env.MODE === 'development'
+        ? 'development'
+        : 'production') as EnvironmentConfig['NODE_ENV'],
       APP_NAME: import.meta.env.VITE_APP_NAME || 'MTYB Virtual Goods Platform',
       APP_VERSION: import.meta.env.VITE_APP_VERSION || '1.0.0',
 
@@ -78,13 +80,17 @@ class EnvironmentManager {
       // Storage
       STORAGE_PREFIX: import.meta.env.VITE_STORAGE_PREFIX || 'mtyb_',
 
-      // Security
-      ENCRYPTION_KEY: import.meta.env.VITE_ENCRYPTION_KEY || 'default-key-change-in-production',
-      JWT_SECRET: import.meta.env.VITE_JWT_SECRET || 'default-secret-change-in-production',
+      // Security - IMPORTANT: Set these in production environment variables
+      // DO NOT use these default keys in production!
+      ENCRYPTION_KEY:
+        import.meta.env.VITE_ENCRYPTION_KEY || 'yTjy3lBrMFcQ9IaL195QjSeId7tslRIkcopkNvdv5iw=',
+      JWT_SECRET:
+        import.meta.env.VITE_JWT_SECRET ||
+        'g95Sx/TFya7LKSDdB0Vq4hSHJfURJq0rA4d9LrqA8bsF0OAc+j5tuTj94lKnessSYJ3JECzlyGjbd0RP2HJzaQ==',
 
       // Monitoring
       SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
-      LOG_LEVEL: (import.meta.env.VITE_LOG_LEVEL as EnvironmentConfig['LOG_LEVEL']) || 'info'
+      LOG_LEVEL: (import.meta.env.VITE_LOG_LEVEL as EnvironmentConfig['LOG_LEVEL']) || 'info',
     };
   }
 
@@ -96,15 +102,15 @@ class EnvironmentManager {
       if (!this.config.CURLEC_PUBLIC_KEY) {
         errors.push('VITE_CURLEC_PUBLIC_KEY is required in production');
       }
-      
+
       if (!this.config.CURLEC_WEBHOOK_SECRET) {
         errors.push('VITE_CURLEC_WEBHOOK_SECRET is required in production');
       }
-      
+
       if (this.config.ENCRYPTION_KEY === 'default-key-change-in-production') {
         errors.push('VITE_ENCRYPTION_KEY must be set in production');
       }
-      
+
       if (this.config.JWT_SECRET === 'default-secret-change-in-production') {
         errors.push('VITE_JWT_SECRET must be set in production');
       }
@@ -119,7 +125,7 @@ class EnvironmentManager {
     if (this.config.API_BASE_URL && !this.isValidUrl(this.config.API_BASE_URL)) {
       errors.push('VITE_API_BASE_URL must be a valid URL');
     }
-    
+
     if (this.config.CURLEC_BASE_URL && !this.isValidUrl(this.config.CURLEC_BASE_URL)) {
       errors.push('VITE_CURLEC_BASE_URL must be a valid URL');
     }
@@ -162,32 +168,30 @@ class EnvironmentManager {
   }
 
   // Feature flag helpers
-  isFeatureEnabled(feature: keyof Pick<EnvironmentConfig, 
-    'ENABLE_PLUGIN_SANDBOX' | 
-    'ENABLE_ORDER_NOTIFICATIONS' | 
-    'ENABLE_ANALYTICS' | 
-    'ENABLE_DEBUG_MODE' | 
-    'ENABLE_MOCK_PAYMENTS'
-  >): boolean {
+  isFeatureEnabled(
+    feature: keyof Pick<
+      EnvironmentConfig,
+      | 'ENABLE_PLUGIN_SANDBOX'
+      | 'ENABLE_ORDER_NOTIFICATIONS'
+      | 'ENABLE_ANALYTICS'
+      | 'ENABLE_DEBUG_MODE'
+      | 'ENABLE_MOCK_PAYMENTS'
+    >
+  ): boolean {
     return this.config[feature];
   }
 
   // Get sanitized config for logging (removes sensitive data)
   getSanitizedConfig(): Partial<EnvironmentConfig> {
-    const { 
-      CURLEC_WEBHOOK_SECRET, 
-      TELEGRAM_BOT_TOKEN, 
-      ENCRYPTION_KEY, 
-      JWT_SECRET, 
-      ...sanitized 
-    } = this.config;
-    
+    const { CURLEC_WEBHOOK_SECRET, TELEGRAM_BOT_TOKEN, ENCRYPTION_KEY, JWT_SECRET, ...sanitized } =
+      this.config;
+
     return {
       ...sanitized,
       CURLEC_WEBHOOK_SECRET: CURLEC_WEBHOOK_SECRET ? '[REDACTED]' : '',
       TELEGRAM_BOT_TOKEN: TELEGRAM_BOT_TOKEN ? '[REDACTED]' : '',
       ENCRYPTION_KEY: '[REDACTED]',
-      JWT_SECRET: '[REDACTED]'
+      JWT_SECRET: '[REDACTED]',
     };
   }
 }
@@ -196,13 +200,7 @@ class EnvironmentManager {
 export const env = new EnvironmentManager();
 
 // Export commonly used values for convenience
-export const {
-  NODE_ENV,
-  APP_NAME,
-  APP_VERSION,
-  API_BASE_URL,
-  CURLEC_BASE_URL
-} = env.getAll();
+export const { NODE_ENV, APP_NAME, APP_VERSION, API_BASE_URL, CURLEC_BASE_URL } = env.getAll();
 
 export const isDevelopment = env.isDevelopment();
 export const isProduction = env.isProduction();

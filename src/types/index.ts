@@ -46,14 +46,14 @@ export enum ProductCategory {
   GAMING = 'gaming',
   SOFTWARE = 'software',
   DIGITAL_GOODS = 'digital_goods',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 export enum ProductStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
   OUT_OF_STOCK = 'out_of_stock',
-  DISCONTINUED = 'discontinued'
+  DISCONTINUED = 'discontinued',
 }
 
 export interface Product {
@@ -104,12 +104,12 @@ export interface DeliveryInfo {
 // ============================================================================
 
 export enum OrderStatus {
-  PENDING = 'pending',           // 待支付
-  PROCESSING = 'processing',     // 处理中
-  COMPLETED = 'completed',       // 已完成
-  FAILED = 'failed',            // 失败
-  CANCELLED = 'cancelled',       // 已取消
-  REFUNDED = 'refunded'         // 已退款
+  PENDING = 'pending', // 待支付
+  PROCESSING = 'processing', // 处理中
+  COMPLETED = 'completed', // 已完成
+  FAILED = 'failed', // 失败
+  CANCELLED = 'cancelled', // 已取消
+  REFUNDED = 'refunded', // 已退款
 }
 
 export interface Order {
@@ -150,14 +150,14 @@ export enum PaymentStatus {
   COMPLETED = 'completed',
   FAILED = 'failed',
   CANCELLED = 'cancelled',
-  REFUNDED = 'refunded'
+  REFUNDED = 'refunded',
 }
 
 export enum PaymentMethod {
   CURLEC = 'curlec',
   CREDIT_CARD = 'credit_card',
   BANK_TRANSFER = 'bank_transfer',
-  E_WALLET = 'e_wallet'
+  E_WALLET = 'e_wallet',
 }
 
 export interface Payment {
@@ -202,7 +202,7 @@ export enum PluginStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
   ERROR = 'error',
-  LOADING = 'loading'
+  LOADING = 'loading',
 }
 
 export interface PluginConfig {
@@ -295,6 +295,69 @@ export interface PaginatedResponse<T> {
 }
 
 // ============================================================================
+// Event Types
+// ============================================================================
+
+export interface AppEvent {
+  type: string;
+  payload?: any;
+  timestamp: Date;
+  source: string;
+}
+
+export interface EventEmitter {
+  on(event: string, listener: (...args: any[]) => void): void;
+  off(event: string, listener: (...args: any[]) => void): void;
+  emit(event: string, ...args: any[]): void;
+}
+
+// ============================================================================
+// Configuration Types
+// ============================================================================
+
+export interface AppConfig {
+  apiBaseUrl: string;
+  paymentGateway: PaymentGatewayConfig;
+  features: FeatureFlags;
+  ui: UIConfig;
+  logging: LoggingConfig;
+}
+
+export interface PaymentGatewayConfig {
+  curlec: {
+    baseUrl: string;
+    publicKey: string;
+    webhookSecret: string;
+  };
+}
+
+export interface FeatureFlags {
+  pluginSandbox: boolean;
+  orderNotifications: boolean;
+  analytics: boolean;
+  mockPayments: boolean;
+}
+
+export interface UIConfig {
+  theme: {
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
+  layout: {
+    maxWidth: number;
+    gridColumns: number;
+  };
+}
+
+export interface LoggingConfig {
+  level: 'debug' | 'info' | 'warn' | 'error';
+  enableConsole: boolean;
+  enableRemote: boolean;
+  remoteUrl?: string;
+}
+
+// ============================================================================
 // State Management Types
 // ============================================================================
 
@@ -383,4 +446,180 @@ export interface ModalState {
   type: string;
   isOpen: boolean;
   data?: any;
+}
+
+// ============================================================================
+// Telegram Mini App Types
+// ============================================================================
+
+export interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  language_code?: string;
+  is_premium?: boolean;
+  photo_url?: string;
+}
+
+export interface TelegramWebApp {
+  initData: string;
+  initDataUnsafe: TelegramWebAppInitData;
+  version: string;
+  platform: string;
+  colorScheme: 'light' | 'dark';
+  themeParams: TelegramThemeParams;
+  isExpanded: boolean;
+  viewportHeight: number;
+  viewportStableHeight: number;
+  headerColor: string;
+  backgroundColor: string;
+  isClosingConfirmationEnabled: boolean;
+  MainButton: TelegramMainButton;
+  BackButton: TelegramBackButton;
+  HapticFeedback: TelegramHapticFeedback;
+}
+
+export interface TelegramWebAppInitData {
+  user?: TelegramUser;
+  receiver?: TelegramUser;
+  chat?: TelegramChat;
+  start_param?: string;
+  can_send_after?: number;
+  auth_date: number;
+  hash: string;
+}
+
+export interface TelegramChat {
+  id: number;
+  type: 'group' | 'supergroup' | 'channel';
+  title: string;
+  username?: string;
+  photo_url?: string;
+}
+
+export interface TelegramThemeParams {
+  bg_color?: string;
+  text_color?: string;
+  hint_color?: string;
+  link_color?: string;
+  button_color?: string;
+  button_text_color?: string;
+  secondary_bg_color?: string;
+}
+
+export interface TelegramMainButton {
+  text: string;
+  color: string;
+  textColor: string;
+  isVisible: boolean;
+  isActive: boolean;
+  isProgressVisible: boolean;
+  setText(text: string): void;
+  onClick(callback: () => void): void;
+  show(): void;
+  hide(): void;
+  enable(): void;
+  disable(): void;
+  showProgress(leaveActive: boolean): void;
+  hideProgress(): void;
+}
+
+export interface TelegramBackButton {
+  isVisible: boolean;
+  onClick(callback: () => void): void;
+  show(): void;
+  hide(): void;
+}
+
+export interface TelegramHapticFeedback {
+  impactOccurred(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'): void;
+  notificationOccurred(type: 'error' | 'success' | 'warning'): void;
+  selectionChanged(): void;
+}
+
+// ============================================================================
+// Utility Types
+// ============================================================================
+
+export type Nullable<T> = T | null;
+export type Optional<T> = T | undefined;
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
+export type WithTimestamps<T> = T & {
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type WithId<T> = T & {
+  id: string;
+};
+
+export type ApiEndpoint<TRequest = any, TResponse = any> = {
+  url: string;
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  requestType?: TRequest;
+  responseType?: TResponse;
+};
+
+// ============================================================================
+// Generic Action Types
+// ============================================================================
+
+export interface Action<T = any> {
+  type: string;
+  payload?: T;
+  error?: boolean;
+  meta?: any;
+}
+
+export interface AsyncAction<T = any> extends Action<T> {
+  loading?: boolean;
+}
+
+// ============================================================================
+// Search and Filter Types
+// ============================================================================
+
+export interface SearchParams {
+  query?: string;
+  filters?: Record<string, any>;
+  sort?: SortOptions;
+  pagination?: PaginationOptions;
+}
+
+export interface SortOptions {
+  field: string;
+  direction: 'asc' | 'desc';
+}
+
+export interface PaginationOptions {
+  page: number;
+  pageSize: number;
+  offset?: number;
+}
+
+// ============================================================================
+// File and Media Types
+// ============================================================================
+
+export interface FileUpload {
+  file: File;
+  url?: string;
+  progress?: number;
+  status: 'pending' | 'uploading' | 'completed' | 'error';
+  error?: string;
+}
+
+export interface MediaAsset {
+  id: string;
+  type: 'image' | 'video' | 'audio' | 'document';
+  url: string;
+  thumbnailUrl?: string;
+  name: string;
+  size: number;
+  mimeType: string;
+  metadata?: Record<string, any>;
 }

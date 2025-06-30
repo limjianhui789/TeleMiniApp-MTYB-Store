@@ -35,7 +35,7 @@ export const TONConnectPage: FC = () => {
                 To display the data related to the TON Connect, it is required to connect your
                 wallet
               </Text>
-              <TonConnectButton className={e('button')}/>
+              <TonConnectButton className={e('button')} />
             </>
           }
         />
@@ -45,13 +45,7 @@ export const TONConnectPage: FC = () => {
 
   const {
     account: { chain, publicKey, address },
-    device: {
-      appName,
-      appVersion,
-      maxProtocolVersion,
-      platform,
-      features,
-    },
+    device: { appName, appVersion, maxProtocolVersion, platform, features },
   } = wallet;
 
   return (
@@ -61,12 +55,10 @@ export const TONConnectPage: FC = () => {
           <>
             <Section>
               <Cell
-                before={
-                  <Avatar src={wallet.imageUrl} alt="Provider logo" width={60} height={60}/>
-                }
+                before={<Avatar src={wallet.imageUrl} alt="Provider logo" width={60} height={60} />}
                 after={<Navigation>About wallet</Navigation>}
                 subtitle={wallet.appName}
-                onClick={(e) => {
+                onClick={e => {
                   e.preventDefault();
                   openLink(wallet.aboutUrl);
                 }}
@@ -74,7 +66,7 @@ export const TONConnectPage: FC = () => {
                 <Title level="3">{wallet.name}</Title>
               </Cell>
             </Section>
-            <TonConnectButton className={e('button-connected')}/>
+            <TonConnectButton className={e('button-connected')} />
           </>
         )}
         <DisplayData
@@ -95,7 +87,7 @@ export const TONConnectPage: FC = () => {
             {
               title: 'Features',
               value: features
-                .map(f => typeof f === 'object' ? f.name : undefined)
+                .map(f => (typeof f === 'object' ? f.name : undefined))
                 .filter(v => v)
                 .join(', '),
             },

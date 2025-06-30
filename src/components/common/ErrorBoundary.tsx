@@ -2,20 +2,20 @@
 // MTYB Virtual Goods Platform - Enhanced Error Boundary Component
 // ============================================================================
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Button, Section, Cell, Text } from '@telegram-apps/telegram-ui';
 import { logger } from '../../core/utils/Logger';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  onError?: ((error: Error, errorInfo: ErrorInfo) => void) | undefined;
 }
 
 interface State {
   hasError: boolean;
-  error?: Error;
-  errorInfo?: ErrorInfo;
+  error?: Error | undefined;
+  errorInfo?: ErrorInfo | undefined;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -27,14 +27,14 @@ export class ErrorBoundary extends Component<Props, State> {
   static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
-      error
+      error,
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
     // Log the error
@@ -48,14 +48,18 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    this.setState({
+      hasError: false,
+      error: undefined,
+      errorInfo: undefined,
+    });
   };
 
   handleReload = () => {
     window.location.reload();
   };
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       // Custom fallback UI
       if (this.props.fallback) {
@@ -77,17 +81,17 @@ export class ErrorBoundary extends Component<Props, State> {
                 </Text>
                 {import.meta.env.DEV && this.state.error?.stack && (
                   <details style={{ marginTop: 12 }}>
-                    <summary style={{ cursor: 'pointer', fontSize: 12 }}>
-                      Technical Details
-                    </summary>
-                    <pre style={{ 
-                      fontSize: 10, 
-                      overflow: 'auto', 
-                      marginTop: 8,
-                      padding: 8,
-                      backgroundColor: 'rgba(0,0,0,0.1)',
-                      borderRadius: 4
-                    }}>
+                    <summary style={{ cursor: 'pointer', fontSize: 12 }}>Technical Details</summary>
+                    <pre
+                      style={{
+                        fontSize: 10,
+                        overflow: 'auto',
+                        marginTop: 8,
+                        padding: 8,
+                        backgroundColor: 'rgba(0,0,0,0.1)',
+                        borderRadius: 4,
+                      }}
+                    >
                       {this.state.error.stack}
                     </pre>
                   </details>
@@ -97,21 +101,13 @@ export class ErrorBoundary extends Component<Props, State> {
           >
             Error Details
           </Cell>
-          
+
           <Cell>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button
-                size="s"
-                mode="filled"
-                onClick={this.handleRetry}
-              >
+              <Button size="s" mode="filled" onClick={this.handleRetry}>
                 Try Again
               </Button>
-              <Button
-                size="s"
-                mode="outline"
-                onClick={this.handleReload}
-              >
+              <Button size="s" mode="outline" onClick={this.handleReload}>
                 Reload Page
               </Button>
             </div>
@@ -132,7 +128,7 @@ export function withErrorBoundary<P extends object>(
 ) {
   return function WrappedComponent(props: P) {
     return (
-      <ErrorBoundary fallback={fallback} onError={onError}>
+      <ErrorBoundary fallback={fallback} onError={onError || undefined}>
         <Component {...props} />
       </ErrorBoundary>
     );

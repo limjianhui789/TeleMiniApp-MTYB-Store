@@ -17,31 +17,23 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'medium',
   message,
   overlay = false,
-  className = ''
+  className = '',
 }) => {
   const sizeClasses = {
     small: 'loading-spinner--small',
     medium: 'loading-spinner--medium',
-    large: 'loading-spinner--large'
+    large: 'loading-spinner--large',
   };
 
   const spinnerContent = (
     <div className={`loading-spinner ${sizeClasses[size]} ${className}`}>
       <Spinner size={size === 'small' ? 's' : size === 'large' ? 'l' : 'm'} />
-      {message && (
-        <div className="loading-spinner__message">
-          {message}
-        </div>
-      )}
+      {message && <div className="loading-spinner__message">{message}</div>}
     </div>
   );
 
   if (overlay) {
-    return (
-      <div className="loading-spinner-overlay">
-        {spinnerContent}
-      </div>
-    );
+    return <div className="loading-spinner-overlay">{spinnerContent}</div>;
   }
 
   return spinnerContent;

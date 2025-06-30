@@ -16,8 +16,10 @@ export function App() {
     >
       <HashRouter>
         <Routes>
-          {routes.map((route) => <Route key={route.path} {...route} />)}
-          <Route path="*" element={<Navigate to="/"/>}/>
+          {routes.map(route => (
+            <Route key={route.path} {...route} />
+          ))}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </HashRouter>
     </AppRoot>

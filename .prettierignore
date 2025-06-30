@@ -1,0 +1,25 @@
+node_modules
+dist
+build
+coverage
+.next
+.nuxt
+.cache
+.temp
+.tmp
+*.log
+*.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Generated files
+**/*.d.ts
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db

@@ -38,19 +38,19 @@
 
 /* Type-specific styling */
 .notification-toast--success {
-  border-left: 4px solid #4CAF50;
+  border-left: 4px solid #4caf50;
 }
 
 .notification-toast--error {
-  border-left: 4px solid #F44336;
+  border-left: 4px solid #f44336;
 }
 
 .notification-toast--warning {
-  border-left: 4px solid #FF9800;
+  border-left: 4px solid #ff9800;
 }
 
 .notification-toast--info {
-  border-left: 4px solid #2196F3;
+  border-left: 4px solid #2196f3;
 }
 
 /* Animation for new notifications */
@@ -75,11 +75,11 @@
     left: 8px;
     right: 8px;
   }
-  
+
   .notification-container--top {
     top: 8px;
   }
-  
+
   .notification-container--bottom {
     bottom: 8px;
   }

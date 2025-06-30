@@ -2,12 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Section, Cell, List, Badge, Button } from '@telegram-apps/telegram-ui';
 import { Page } from '../../components/Page';
 import { logger } from '../../core/utils/Logger';
-import {
-  pluginManager,
-  demoPlugin,
-  pluginTester,
-  mockDataGenerator
-} from '../../core';
+import { pluginManager, demoPlugin, pluginTester, mockDataGenerator } from '../../core';
 
 export const DemoPage: React.FC = () => {
   const [testStatus, setTestStatus] = useState('Ready');
@@ -65,7 +60,10 @@ export const DemoPage: React.FC = () => {
         logger.info('Demo plugin test completed successfully');
       } else {
         setPluginTestStatus('❌ Plugin Validation Failed');
-        logger.error('Plugin validation failed:', new Error(validationResult.errors.map((e: any) => e.message).join(', ')));
+        logger.error(
+          'Plugin validation failed:',
+          new Error(validationResult.errors.map((e: any) => e.message).join(', '))
+        );
       }
     } catch (error) {
       setPluginTestStatus('❌ Plugin Test Failed');
@@ -107,12 +105,12 @@ export const DemoPage: React.FC = () => {
           header="MTYB Platform Demo"
           footer="This page demonstrates the core infrastructure components"
         >
-          <Cell
-            subtitle="Core architecture and components are ready"
-          >
+          <Cell subtitle="Core architecture and components are ready">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               Platform Status
-              <Badge type="number" mode="primary">Ready</Badge>
+              <Badge type="number" mode="primary">
+                Ready
+              </Badge>
             </div>
           </Cell>
         </Section>
@@ -121,11 +119,7 @@ export const DemoPage: React.FC = () => {
           <Cell
             subtitle="Simple test to verify the page loads"
             after={
-              <Button
-                size="s"
-                mode="filled"
-                onClick={handleBasicTest}
-              >
+              <Button size="s" mode="filled" onClick={handleBasicTest}>
                 Test
               </Button>
             }
@@ -136,11 +130,7 @@ export const DemoPage: React.FC = () => {
           <Cell
             subtitle="Test the logging system"
             after={
-              <Button
-                size="s"
-                mode="outline"
-                onClick={handleLoggerTest}
-              >
+              <Button size="s" mode="outline" onClick={handleLoggerTest}>
                 Test Logger
               </Button>
             }
@@ -150,9 +140,7 @@ export const DemoPage: React.FC = () => {
         </Section>
 
         <Section header="Plugin System Tests">
-          <Cell
-            subtitle="Plugin Manager initialization status"
-          >
+          <Cell subtitle="Plugin Manager initialization status">
             Plugin Manager: {pluginManagerStatus}
           </Cell>
 
@@ -199,42 +187,22 @@ export const DemoPage: React.FC = () => {
           <Cell subtitle="Utility classes implemented">
             Logger, Validator, ConfigManager, EventEmitter
           </Cell>
-          <Cell subtitle="Environment configuration">
-            Type-safe environment management
-          </Cell>
-          <Cell subtitle="Component library">
-            Enhanced UI components
-          </Cell>
+          <Cell subtitle="Environment configuration">Type-safe environment management</Cell>
+          <Cell subtitle="Component library">Enhanced UI components</Cell>
         </Section>
 
         <Section header="Phase 2 Completed ✅">
-          <Cell subtitle="Plugin Manager implemented">
-            Core plugin management system
-          </Cell>
-          <Cell subtitle="Plugin Registry implemented">
-            Plugin registration and discovery
-          </Cell>
-          <Cell subtitle="Plugin Event System implemented">
-            Event-driven plugin communication
-          </Cell>
-          <Cell subtitle="Plugin Development Tools">
-            Testing utilities and templates
-          </Cell>
-          <Cell subtitle="Demo Plugin created">
-            Example plugin for testing
-          </Cell>
+          <Cell subtitle="Plugin Manager implemented">Core plugin management system</Cell>
+          <Cell subtitle="Plugin Registry implemented">Plugin registration and discovery</Cell>
+          <Cell subtitle="Plugin Event System implemented">Event-driven plugin communication</Cell>
+          <Cell subtitle="Plugin Development Tools">Testing utilities and templates</Cell>
+          <Cell subtitle="Demo Plugin created">Example plugin for testing</Cell>
         </Section>
 
         <Section header="Next Steps">
-          <Cell subtitle="Phase 3: Payment Integration">
-            ⏳ Planned - Curlec Gateway
-          </Cell>
-          <Cell subtitle="Phase 4: Product Management">
-            ⏳ Planned - Product CRUD System
-          </Cell>
-          <Cell subtitle="Phase 5: Example Plugins">
-            ⏳ Planned - VPN, Netflix, etc.
-          </Cell>
+          <Cell subtitle="Phase 3: Payment Integration">⏳ Planned - Curlec Gateway</Cell>
+          <Cell subtitle="Phase 4: Product Management">⏳ Planned - Product CRUD System</Cell>
+          <Cell subtitle="Phase 5: Example Plugins">⏳ Planned - VPN, Netflix, etc.</Cell>
         </Section>
       </List>
     </Page>

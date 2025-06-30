@@ -1,0 +1,312 @@
+/* ============================================================================ */
+/* MTYB Theme System - Light/Dark Mode Support */
+/* ============================================================================ */
+
+/* Base Color Palette */
+:root {
+  /* Base Colors */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* Gray Scale (Light Theme) */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+
+  /* Gray Scale (Dark Theme) */
+  --dark-50: #0c0c0d;
+  --dark-100: #171719;
+  --dark-200: #232326;
+  --dark-300: #2e2e32;
+  --dark-400: #3a3a3f;
+  --dark-500: #48484f;
+  --dark-600: #56565e;
+  --dark-700: #6e6e76;
+  --dark-800: #8a8a90;
+  --dark-900: #adadb3;
+
+  /* Brand Colors */
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+
+  /* Status Colors */
+  --green-500: #22c55e;
+  --green-600: #16a34a;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --yellow-500: #f59e0b;
+  --yellow-600: #d97706;
+  --purple-500: #8b5cf6;
+  --purple-600: #7c3aed;
+}
+
+/* ============================================================================ */
+/* Light Theme (Default) */
+/* ============================================================================ */
+
+:root,
+[data-theme='light'] {
+  --color-background: var(--color-white);
+  --color-background-secondary: var(--gray-50);
+  --color-background-elevated: var(--color-white);
+  --color-card-background: var(--color-white);
+  --color-muted: var(--gray-100);
+
+  --color-text-primary: var(--gray-900);
+  --color-text-secondary: var(--gray-600);
+  --color-text-tertiary: var(--gray-500);
+  --color-text-inverse: var(--color-white);
+
+  --color-border: var(--gray-200);
+  --color-border-strong: var(--gray-300);
+  --color-border-light: var(--gray-100);
+
+  --color-primary: var(--blue-600);
+  --color-primary-light: var(--blue-100);
+  --color-primary-dark: var(--blue-700);
+  --color-primary-contrast: var(--color-white);
+
+  --color-success: var(--green-500);
+  --color-success-light: #dcfce7;
+  --color-warning: var(--yellow-500);
+  --color-warning-light: #fef3c7;
+  --color-error: var(--red-500);
+  --color-error-light: #fee2e2;
+  --color-info: var(--blue-500);
+  --color-info-light: var(--blue-50);
+
+  /* Interactive States */
+  --color-hover: rgba(0, 0, 0, 0.04);
+  --color-active: rgba(0, 0, 0, 0.08);
+  --color-focus: var(--blue-500);
+
+  /* Shadows */
+  --shadow-color: 0, 0, 0;
+  --shadow-sm: 0 1px 2px 0 rgba(var(--shadow-color), 0.05);
+  --shadow-base:
+    0 1px 3px 0 rgba(var(--shadow-color), 0.1), 0 1px 2px 0 rgba(var(--shadow-color), 0.06);
+  --shadow-md:
+    0 4px 6px -1px rgba(var(--shadow-color), 0.1), 0 2px 4px -1px rgba(var(--shadow-color), 0.06);
+  --shadow-lg:
+    0 10px 15px -3px rgba(var(--shadow-color), 0.1), 0 4px 6px -2px rgba(var(--shadow-color), 0.05);
+  --shadow-xl:
+    0 20px 25px -5px rgba(var(--shadow-color), 0.1),
+    0 10px 10px -5px rgba(var(--shadow-color), 0.04);
+}
+
+/* ============================================================================ */
+/* Dark Theme */
+/* ============================================================================ */
+
+[data-theme='dark'] {
+  --color-background: var(--dark-50);
+  --color-background-secondary: var(--dark-100);
+  --color-background-elevated: var(--dark-200);
+  --color-card-background: var(--dark-100);
+  --color-muted: var(--dark-200);
+
+  --color-text-primary: var(--dark-900);
+  --color-text-secondary: var(--dark-700);
+  --color-text-tertiary: var(--dark-600);
+  --color-text-inverse: var(--dark-50);
+
+  --color-border: var(--dark-300);
+  --color-border-strong: var(--dark-400);
+  --color-border-light: var(--dark-200);
+
+  --color-primary: var(--blue-500);
+  --color-primary-light: var(--dark-300);
+  --color-primary-dark: var(--blue-400);
+  --color-primary-contrast: var(--dark-50);
+
+  --color-success: var(--green-500);
+  --color-success-light: rgba(34, 197, 94, 0.15);
+  --color-warning: var(--yellow-500);
+  --color-warning-light: rgba(245, 158, 11, 0.15);
+  --color-error: var(--red-500);
+  --color-error-light: rgba(239, 68, 68, 0.15);
+  --color-info: var(--blue-400);
+  --color-info-light: rgba(59, 130, 246, 0.15);
+
+  /* Interactive States */
+  --color-hover: rgba(255, 255, 255, 0.08);
+  --color-active: rgba(255, 255, 255, 0.12);
+  --color-focus: var(--blue-400);
+
+  /* Shadows (more prominent in dark mode) */
+  --shadow-color: 0, 0, 0;
+  --shadow-sm: 0 1px 2px 0 rgba(var(--shadow-color), 0.3);
+  --shadow-base:
+    0 1px 3px 0 rgba(var(--shadow-color), 0.4), 0 1px 2px 0 rgba(var(--shadow-color), 0.2);
+  --shadow-md:
+    0 4px 6px -1px rgba(var(--shadow-color), 0.4), 0 2px 4px -1px rgba(var(--shadow-color), 0.3);
+  --shadow-lg:
+    0 10px 15px -3px rgba(var(--shadow-color), 0.4), 0 4px 6px -2px rgba(var(--shadow-color), 0.2);
+  --shadow-xl:
+    0 20px 25px -5px rgba(var(--shadow-color), 0.5), 0 10px 10px -5px rgba(var(--shadow-color), 0.3);
+}
+
+/* ============================================================================ */
+/* Auto Theme (follows system preference) */
+/* ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  [data-theme='auto'] {
+    --color-background: var(--dark-50);
+    --color-background-secondary: var(--dark-100);
+    --color-background-elevated: var(--dark-200);
+    --color-card-background: var(--dark-100);
+    --color-muted: var(--dark-200);
+
+    --color-text-primary: var(--dark-900);
+    --color-text-secondary: var(--dark-700);
+    --color-text-tertiary: var(--dark-600);
+    --color-text-inverse: var(--dark-50);
+
+    --color-border: var(--dark-300);
+    --color-border-strong: var(--dark-400);
+    --color-border-light: var(--dark-200);
+
+    --color-primary: var(--blue-500);
+    --color-primary-light: var(--dark-300);
+    --color-primary-dark: var(--blue-400);
+    --color-primary-contrast: var(--dark-50);
+
+    --color-success: var(--green-500);
+    --color-success-light: rgba(34, 197, 94, 0.15);
+    --color-warning: var(--yellow-500);
+    --color-warning-light: rgba(245, 158, 11, 0.15);
+    --color-error: var(--red-500);
+    --color-error-light: rgba(239, 68, 68, 0.15);
+    --color-info: var(--blue-400);
+    --color-info-light: rgba(59, 130, 246, 0.15);
+
+    /* Interactive States */
+    --color-hover: rgba(255, 255, 255, 0.08);
+    --color-active: rgba(255, 255, 255, 0.12);
+    --color-focus: var(--blue-400);
+
+    /* Shadows */
+    --shadow-color: 0, 0, 0;
+    --shadow-sm: 0 1px 2px 0 rgba(var(--shadow-color), 0.3);
+    --shadow-base:
+      0 1px 3px 0 rgba(var(--shadow-color), 0.4), 0 1px 2px 0 rgba(var(--shadow-color), 0.2);
+    --shadow-md:
+      0 4px 6px -1px rgba(var(--shadow-color), 0.4), 0 2px 4px -1px rgba(var(--shadow-color), 0.3);
+    --shadow-lg:
+      0 10px 15px -3px rgba(var(--shadow-color), 0.4), 0 4px 6px -2px rgba(var(--shadow-color), 0.2);
+    --shadow-xl:
+      0 20px 25px -5px rgba(var(--shadow-color), 0.5),
+      0 10px 10px -5px rgba(var(--shadow-color), 0.3);
+  }
+}
+
+/* ============================================================================ */
+/* Telegram Integration for Both Themes */
+/* ============================================================================ */
+
+:root[data-telegram-theme] {
+  /* Override with Telegram theme colors when available */
+  --color-background: var(--tg-bg-color, var(--color-background));
+  --color-background-secondary: var(--tg-secondary-bg-color, var(--color-background-secondary));
+  --color-text-primary: var(--tg-text-color, var(--color-text-primary));
+  --color-text-secondary: var(--tg-hint-color, var(--color-text-secondary));
+  --color-primary: var(--tg-button-color, var(--color-primary));
+  --color-primary-contrast: var(--tg-button-text-color, var(--color-primary-contrast));
+}
+
+/* ============================================================================ */
+/* Theme Transition Animation */
+/* ============================================================================ */
+
+*,
+*::before,
+*::after {
+  transition:
+    background-color var(--duration-200) var(--ease-out),
+    border-color var(--duration-200) var(--ease-out),
+    color var(--duration-200) var(--ease-out),
+    box-shadow var(--duration-200) var(--ease-out);
+}
+
+/* Disable transitions during theme changes to prevent flash */
+[data-theme-changing] *,
+[data-theme-changing] *::before,
+[data-theme-changing] *::after {
+  transition: none !important;
+}
+
+/* ============================================================================ */
+/* Utility Classes for Theme-aware Components */
+/* ============================================================================ */
+
+.theme-surface {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+.theme-surface-secondary {
+  background-color: var(--color-background-secondary);
+  color: var(--color-text-primary);
+}
+
+.theme-surface-elevated {
+  background-color: var(--color-background-elevated);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-card {
+  background-color: var(--color-card-background);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.theme-text-primary {
+  color: var(--color-text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.theme-text-tertiary {
+  color: var(--color-text-tertiary);
+}
+
+.theme-border {
+  border-color: var(--color-border);
+}
+
+.theme-focus {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* ============================================================================ */
+/* Reduced Motion Support */
+/* ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

@@ -18,9 +18,7 @@ function applyMods(element: string, mod: any): string {
     return classNames(mod.map(m => applyMods(element, m)));
   }
   if (isRecord(mod)) {
-    return classNames(
-      Object.entries(mod).map(([mod, v]) => v && applyMods(element, mod)),
-    );
+    return classNames(Object.entries(mod).map(([mod, v]) => v && applyMods(element, mod)));
   }
   const v = classNames(mod);
   return v && `${element}--${v}`;

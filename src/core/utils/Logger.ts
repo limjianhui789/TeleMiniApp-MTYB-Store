@@ -8,7 +8,7 @@ export enum LogLevel {
   DEBUG = 0,
   INFO = 1,
   WARN = 2,
-  ERROR = 3
+  ERROR = 3,
 }
 
 export interface LogEntry {
@@ -17,7 +17,7 @@ export interface LogEntry {
   data?: any;
   timestamp: Date;
   source?: string;
-  error?: Error;
+  error?: Error | undefined;
 }
 
 export interface ILogger {
@@ -74,11 +74,11 @@ export class Logger implements ILogger {
       data,
       timestamp: new Date(),
       source: this.source,
-      error
+      error: error || undefined,
     };
 
     this.logs.push(entry);
-    
+
     // Keep only the last maxLogs entries
     if (this.logs.length > this.maxLogs) {
       this.logs = this.logs.slice(-this.maxLogs);

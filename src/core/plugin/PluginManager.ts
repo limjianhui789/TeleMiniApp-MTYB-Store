@@ -2,8 +2,8 @@
 // MTYB Virtual Goods Platform - Plugin Manager
 // ============================================================================
 
-import { BasePlugin, IPluginManager } from '../../types/plugin';
-import { PluginContext, DeliveryResult, PluginHealthStatus } from '../../types';
+import { BasePlugin, type IPluginManager } from '../../types/plugin';
+import { type PluginContext, type DeliveryResult, type PluginHealthStatus } from '../../types';
 import { Logger } from '../utils/Logger';
 import { pluginRegistry } from './PluginRegistry';
 import { pluginEventEmitter } from './PluginEventEmitter';
@@ -148,7 +148,7 @@ export class PluginManager implements IPluginManager {
   async reloadPlugin(pluginId: string): Promise<void> {
     try {
       this.logger.info(`Reloading plugin: ${pluginId}`);
-      
+
       const entry = pluginRegistry.get(pluginId);
       if (!entry) {
         throw new Error(`Plugin '${pluginId}' is not registered`);
@@ -236,7 +236,7 @@ export class PluginManager implements IPluginManager {
         status = {
           isHealthy: true,
           lastCheck: new Date(),
-          responseTime: 0
+          responseTime: 0,
         };
       }
 
@@ -249,7 +249,7 @@ export class PluginManager implements IPluginManager {
         isHealthy: false,
         lastCheck: new Date(),
         error: (error as Error).message,
-        responseTime: 0
+        responseTime: 0,
       };
 
       // Update health status in registry
@@ -261,7 +261,7 @@ export class PluginManager implements IPluginManager {
 
   async checkAllPluginsHealth(): Promise<Record<string, PluginHealthStatus>> {
     this.logger.debug('Checking health of all plugins...');
-    
+
     const results: Record<string, PluginHealthStatus> = {};
     const plugins = pluginRegistry.getAll();
 
@@ -269,17 +269,20 @@ export class PluginManager implements IPluginManager {
     pluginEventEmitter.emitSystemHealthCheckAll();
 
     // Check health of all plugins in parallel
-    const healthCheckPromises = plugins.map(async (entry) => {
+    const healthCheckPromises = plugins.map(async entry => {
       try {
         const status = await this.checkPluginHealth(entry.plugin.config.id);
         results[entry.plugin.config.id] = status;
       } catch (error) {
-        this.logger.error(`Health check failed for plugin ${entry.plugin.config.id}:`, error as Error);
+        this.logger.error(
+          `Health check failed for plugin ${entry.plugin.config.id}:`,
+          error as Error
+        );
         results[entry.plugin.config.id] = {
           isHealthy: false,
           lastCheck: new Date(),
           error: `Health check failed: ${(error as Error).message}`,
-          responseTime: 0
+          responseTime: 0,
         };
       }
     });
@@ -314,10 +317,7 @@ export class PluginManager implements IPluginManager {
   // Utility Methods
   // ============================================================================
 
-  private async executeWithTimeout<T>(
-    operation: () => Promise<T>,
-    timeoutMs: number
-  ): Promise<T> {
+  private async executeWithTimeout<T>(operation: () => Promise<T>, timeoutMs: number): Promise<T> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error(`Operation timed out after ${timeoutMs}ms`));
@@ -386,7 +386,7 @@ export class PluginManager implements IPluginManager {
       activePlugins: registryStats.enabledPlugins,
       healthyPlugins: registryStats.healthyPlugins,
       registryStats,
-      eventStats
+      eventStats,
     };
   }
 }

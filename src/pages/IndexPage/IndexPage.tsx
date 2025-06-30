@@ -14,12 +14,11 @@ export const IndexPage: FC = () => {
           header="MTYB Platform"
           footer="Virtual goods platform with plugin-based architecture"
         >
+          <Link to="/products">
+            <Cell subtitle="Browse digital goods and services">🛍️ Products</Cell>
+          </Link>
           <Link to="/demo">
-            <Cell
-              subtitle="Explore the core infrastructure and components"
-            >
-              🚀 Platform Demo
-            </Cell>
+            <Cell subtitle="Explore the core infrastructure and components">🚀 Platform Demo</Cell>
           </Link>
         </Section>
         <Section
@@ -28,7 +27,7 @@ export const IndexPage: FC = () => {
         >
           <Link to="/ton-connect">
             <Cell
-              before={<Image src={tonSvg} style={{ backgroundColor: '#007AFF' }}/>}
+              before={<Image src={tonSvg} style={{ backgroundColor: '#007AFF' }} />}
               subtitle="Connect your TON wallet"
             >
               TON Connect

@@ -35,17 +35,17 @@ export class EventEmitter implements IEventEmitter {
 
   on<T = any>(event: string, listener: EventListener<T>): EventSubscription {
     this.addListener(event, listener, false);
-    
+
     return {
-      unsubscribe: () => this.off(event, listener)
+      unsubscribe: () => this.off(event, listener),
     };
   }
 
   once<T = any>(event: string, listener: EventListener<T>): EventSubscription {
     this.addListener(event, listener, true);
-    
+
     return {
-      unsubscribe: () => this.off(event, listener)
+      unsubscribe: () => this.off(event, listener),
     };
   }
 
@@ -72,11 +72,11 @@ export class EventEmitter implements IEventEmitter {
     const onceListeners = this.onceListeners.get(event);
 
     const allListeners: EventListener[] = [];
-    
+
     if (listeners) {
       allListeners.push(...Array.from(listeners));
     }
-    
+
     if (onceListeners) {
       allListeners.push(...Array.from(onceListeners));
       // Clear once listeners after getting them
@@ -87,13 +87,13 @@ export class EventEmitter implements IEventEmitter {
       return;
     }
 
-    logger.debug(`Emitting event: ${event}`, { 
+    logger.debug(`Emitting event: ${event}`, {
       listenerCount: allListeners.length,
-      data: data 
+      data: data,
     });
 
     // Execute all listeners
-    const promises = allListeners.map(async (listener) => {
+    const promises = allListeners.map(async listener => {
       try {
         await listener(data);
       } catch (error) {
@@ -122,31 +122,31 @@ export class EventEmitter implements IEventEmitter {
 
   eventNames(): string[] {
     const events = new Set<string>();
-    
+
     for (const event of this.listeners.keys()) {
       events.add(event);
     }
-    
+
     for (const event of this.onceListeners.keys()) {
       events.add(event);
     }
-    
+
     return Array.from(events);
   }
 
   private addListener(event: string, listener: EventListener, once: boolean): void {
     const map = once ? this.onceListeners : this.listeners;
-    
+
     if (!map.has(event)) {
       map.set(event, new Set());
     }
-    
+
     const listeners = map.get(event)!;
-    
+
     if (listeners.size >= this.maxListeners) {
       logger.warn(`Max listeners (${this.maxListeners}) exceeded for event: ${event}`);
     }
-    
+
     listeners.add(listener);
   }
 }
@@ -157,17 +157,17 @@ export const globalEventEmitter = new EventEmitter();
 // Utility functions for common event patterns
 export const createEventNamespace = (namespace: string) => {
   return {
-    on: <T = any>(event: string, listener: EventListener<T>) => 
+    on: <T = any>(event: string, listener: EventListener<T>) =>
       globalEventEmitter.on(`${namespace}:${event}`, listener),
-    
-    off: <T = any>(event: string, listener: EventListener<T>) => 
+
+    off: <T = any>(event: string, listener: EventListener<T>) =>
       globalEventEmitter.off(`${namespace}:${event}`, listener),
-    
-    emit: <T = any>(event: string, data?: T) => 
+
+    emit: <T = any>(event: string, data?: T) =>
       globalEventEmitter.emit(`${namespace}:${event}`, data),
-    
-    once: <T = any>(event: string, listener: EventListener<T>) => 
-      globalEventEmitter.once(`${namespace}:${event}`, listener)
+
+    once: <T = any>(event: string, listener: EventListener<T>) =>
+      globalEventEmitter.once(`${namespace}:${event}`, listener),
   };
 };
 

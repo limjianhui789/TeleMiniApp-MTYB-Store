@@ -14,7 +14,7 @@ export type RGBProps = JSX.IntrinsicElements['div'] & {
 
 export const RGB: FC<RGBProps> = ({ color, className, ...rest }) => (
   <span {...rest} className={classNames(b(), className)}>
-    <i className={e('icon')} style={{ backgroundColor: color }}/>
+    <i className={e('icon')} style={{ backgroundColor: color }} />
     {color}
   </span>
 );

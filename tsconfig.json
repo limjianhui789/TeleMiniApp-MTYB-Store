@@ -1,36 +1,40 @@
 {
   "compilerOptions": {
     "allowImportingTsExtensions": true,
+    "allowSyntheticDefaultImports": true,
+    "exactOptionalPropertyTypes": false,
+    "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/core/*": ["./src/core/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/pages/*": ["./src/pages/*"],
+      "@/helpers/*": ["./src/helpers/*"]
     },
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
+    "strictNullChecks": true,
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "types": [
-      "vite/client"
-    ]
+    "verbatimModuleSyntax": true,
+    "types": ["vite/client"]
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src/**/*", "src/**/*.json"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"],
   "references": [
     {
       "path": "./tsconfig.node.json"

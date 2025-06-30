@@ -2,8 +2,8 @@
 // MTYB Virtual Goods Platform - Plugin Registry
 // ============================================================================
 
-import { BasePlugin, IPluginRegistry, PluginRegistryEntry } from '../../types/plugin';
-import { PluginHealthStatus } from '../../types';
+import { BasePlugin, type IPluginRegistry, type PluginRegistryEntry } from '../../types/plugin';
+import { type PluginHealthStatus } from '../../types';
 import { Logger } from '../utils/Logger';
 import { Validator } from '../utils/Validator';
 import { pluginEventEmitter } from './PluginEventEmitter';
@@ -27,11 +27,13 @@ export class PluginRegistry implements IPluginRegistry {
     try {
       // Validate plugin
       await this.validatePlugin(plugin);
-      
+
       // Validate configuration
       const configValidation = await plugin.validateConfig(config);
       if (!configValidation.isValid) {
-        throw new Error(`Plugin configuration validation failed: ${configValidation.errors.join(', ')}`);
+        throw new Error(
+          `Plugin configuration validation failed: ${configValidation.errors.join(', ')}`
+        );
       }
 
       // Check if plugin already exists
@@ -45,7 +47,7 @@ export class PluginRegistry implements IPluginRegistry {
         config,
         isEnabled: false,
         registeredAt: new Date(),
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
 
       // Store in registry
@@ -54,7 +56,9 @@ export class PluginRegistry implements IPluginRegistry {
       // Emit registration event
       pluginEventEmitter.emitPluginRegistered(plugin.config.id);
 
-      this.logger.info(`Plugin registered successfully: ${plugin.config.id} v${plugin.config.version}`);
+      this.logger.info(
+        `Plugin registered successfully: ${plugin.config.id} v${plugin.config.version}`
+      );
     } catch (error) {
       this.logger.error(`Failed to register plugin ${plugin.config.id}:`, error as Error);
       throw error;
@@ -123,7 +127,9 @@ export class PluginRegistry implements IPluginRegistry {
       // Validate new configuration
       const configValidation = await entry.plugin.validateConfig(config);
       if (!configValidation.isValid) {
-        throw new Error(`Configuration validation failed: ${configValidation.errors.map(e => e.message).join(', ')}`);
+        throw new Error(
+          `Configuration validation failed: ${configValidation.errors.map(e => e.message).join(', ')}`
+        );
       }
 
       // Update configuration
@@ -176,7 +182,10 @@ export class PluginRegistry implements IPluginRegistry {
 
       entry.lastUpdated = new Date();
     } catch (error) {
-      this.logger.error(`Failed to ${enabled ? 'enable' : 'disable'} plugin ${pluginId}:`, error as Error);
+      this.logger.error(
+        `Failed to ${enabled ? 'enable' : 'disable'} plugin ${pluginId}:`,
+        error as Error
+      );
       pluginEventEmitter.emitPluginError(pluginId, error as Error);
       throw error;
     }
@@ -205,7 +214,9 @@ export class PluginRegistry implements IPluginRegistry {
       pluginEventEmitter.emitHealthRecovered(pluginId);
     }
 
-    this.logger.debug(`Plugin health status updated: ${pluginId} - ${status.isHealthy ? 'healthy' : 'unhealthy'}`);
+    this.logger.debug(
+      `Plugin health status updated: ${pluginId} - ${status.isHealthy ? 'healthy' : 'unhealthy'}`
+    );
   }
 
   // ============================================================================
@@ -230,7 +241,9 @@ export class PluginRegistry implements IPluginRegistry {
 
     // Validate ID format
     if (!Validator.validators.pluginId(config.id)) {
-      throw new Error('Plugin ID must be a valid identifier (alphanumeric with hyphens/underscores)');
+      throw new Error(
+        'Plugin ID must be a valid identifier (alphanumeric with hyphens/underscores)'
+      );
     }
 
     // Validate version format (basic check for semantic versioning)
@@ -264,7 +277,7 @@ export class PluginRegistry implements IPluginRegistry {
     const all = this.getAll();
     const enabled = all.filter(entry => entry.isEnabled);
     const disabled = all.filter(entry => !entry.isEnabled);
-    
+
     const pluginsByCategory: Record<string, number> = {};
     let healthyPlugins = 0;
     let unhealthyPlugins = 0;
@@ -288,7 +301,7 @@ export class PluginRegistry implements IPluginRegistry {
       disabledPlugins: disabled.length,
       pluginsByCategory,
       healthyPlugins,
-      unhealthyPlugins
+      unhealthyPlugins,
     };
   }
 
@@ -335,8 +348,8 @@ export class PluginRegistry implements IPluginRegistry {
 
   async cleanup(): Promise<void> {
     this.logger.info('Cleaning up plugin registry...');
-    
-    const cleanupPromises = Array.from(this.plugins.values()).map(async (entry) => {
+
+    const cleanupPromises = Array.from(this.plugins.values()).map(async entry => {
       try {
         if (entry.isEnabled) {
           await entry.plugin.cleanup();
@@ -348,7 +361,7 @@ export class PluginRegistry implements IPluginRegistry {
 
     await Promise.all(cleanupPromises);
     this.plugins.clear();
-    
+
     this.logger.info('Plugin registry cleanup completed');
   }
 }

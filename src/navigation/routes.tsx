@@ -1,11 +1,44 @@
+import React, { Suspense, lazy } from 'react';
 import type { ComponentType, JSX } from 'react';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
-import { IndexPage } from '@/pages/IndexPage/IndexPage';
-import { InitDataPage } from '@/pages/InitDataPage.tsx';
-import { LaunchParamsPage } from '@/pages/LaunchParamsPage.tsx';
-import { ThemeParamsPage } from '@/pages/ThemeParamsPage.tsx';
-import { TONConnectPage } from '@/pages/TONConnectPage/TONConnectPage';
-import { DemoPage } from '@/pages/DemoPage/DemoPage';
+// Lazy load all pages for better performance
+const IndexPage = lazy(() => import('@/pages/IndexPage/IndexPage').then(m => ({ default: m.IndexPage })));
+const InitDataPage = lazy(() => import('@/pages/InitDataPage.tsx').then(m => ({ default: m.InitDataPage })));
+const LaunchParamsPage = lazy(() => import('@/pages/LaunchParamsPage.tsx').then(m => ({ default: m.LaunchParamsPage })));
+const ThemeParamsPage = lazy(() => import('@/pages/ThemeParamsPage.tsx').then(m => ({ default: m.ThemeParamsPage })));
+const TONConnectPage = lazy(() => import('@/pages/TONConnectPage/TONConnectPage').then(m => ({ default: m.TONConnectPage })));
+const DemoPage = lazy(() => import('@/pages/DemoPage/DemoPage').then(m => ({ default: m.DemoPage })));
+const ProductsPage = lazy(() => import('@/pages/ProductsPage/ProductsPage').then(m => ({ default: m.ProductsPage })));
+const PaymentSuccessPage = lazy(() => import('@/pages/PaymentSuccessPage').then(m => ({ default: m.PaymentSuccessPage })));
+const PaymentCancelPage = lazy(() => import('@/pages/PaymentCancelPage').then(m => ({ default: m.PaymentCancelPage })));
+const OrderDetailPage = lazy(() => import('@/pages/OrderDetailPage').then(m => ({ default: m.OrderDetailPage })));
+const CartPageEnhanced = lazy(() => import('@/pages/CartPage/CartPageEnhanced').then(m => ({ default: m.CartPageEnhanced })));
+const ProductDetailPage = lazy(() => import('@/pages/ProductDetailPage/ProductDetailPage').then(m => ({ default: m.ProductDetailPage })));
+const PluginManagementPage = lazy(() => import('@/pages/PluginManagementPage').then(m => ({ default: m.PluginManagementPage })));
+const PluginStorePage = lazy(() => import('@/pages/PluginStorePage').then(m => ({ default: m.PluginStorePage })));
+const PluginPublishPage = lazy(() => import('@/pages/PluginPublishPage').then(m => ({ default: m.PluginPublishPage })));
+const ThemeDemoPage = lazy(() => import('@/pages/ThemeDemoPage').then(m => ({ default: m.ThemeDemoPage })));
+const ThemeSettingsPage = lazy(() => import('@/pages/ThemeSettingsPage').then(m => ({ default: m.ThemeSettingsPage })));
+
+// Wrapper function to create suspense-wrapped components
+const withSuspense = (Component: React.LazyExoticComponent<any>) => {
+  const WrappedComponent: React.FC = (props) => (
+    <Suspense fallback={
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '50vh' 
+      }}>
+        <LoadingSpinner size="lg" />
+      </div>
+    }>
+      <Component {...props} />
+    </Suspense>
+  );
+  return WrappedComponent;
+};
 
 interface Route {
   path: string;
@@ -15,14 +48,25 @@ interface Route {
 }
 
 export const routes: Route[] = [
-  { path: '/', Component: IndexPage },
-  { path: '/demo', Component: DemoPage, title: 'Platform Demo' },
-  { path: '/init-data', Component: InitDataPage, title: 'Init Data' },
-  { path: '/theme-params', Component: ThemeParamsPage, title: 'Theme Params' },
-  { path: '/launch-params', Component: LaunchParamsPage, title: 'Launch Params' },
+  { path: '/', Component: withSuspense(IndexPage) },
+  { path: '/products', Component: withSuspense(ProductsPage), title: 'Products' },
+  { path: '/products/:productId', Component: withSuspense(ProductDetailPage), title: 'Product Details' },
+  { path: '/cart', Component: withSuspense(CartPageEnhanced), title: 'Shopping Cart' },
+  { path: '/payment/success', Component: withSuspense(PaymentSuccessPage), title: 'Payment Success' },
+  { path: '/payment/cancel', Component: withSuspense(PaymentCancelPage), title: 'Payment Cancelled' },
+  { path: '/orders/:orderId', Component: withSuspense(OrderDetailPage), title: 'Order Details' },
+  { path: '/plugins', Component: withSuspense(PluginStorePage), title: 'Plugin Store' },
+  { path: '/plugins/manage', Component: withSuspense(PluginManagementPage), title: 'Plugin Management' },
+  { path: '/plugins/publish', Component: withSuspense(PluginPublishPage), title: 'Publish Plugin' },
+  { path: '/theme/demo', Component: withSuspense(ThemeDemoPage), title: 'Theme Demo' },
+  { path: '/theme/settings', Component: withSuspense(ThemeSettingsPage), title: 'Theme Settings' },
+  { path: '/demo', Component: withSuspense(DemoPage), title: 'Platform Demo' },
+  { path: '/init-data', Component: withSuspense(InitDataPage), title: 'Init Data' },
+  { path: '/theme-params', Component: withSuspense(ThemeParamsPage), title: 'Theme Params' },
+  { path: '/launch-params', Component: withSuspense(LaunchParamsPage), title: 'Launch Params' },
   {
     path: '/ton-connect',
-    Component: TONConnectPage,
+    Component: withSuspense(TONConnectPage),
     title: 'TON Connect',
     icon: (
       <svg

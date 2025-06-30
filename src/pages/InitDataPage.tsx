@@ -36,9 +36,7 @@ export const InitDataPage: FC = () => {
   }, [initDataState, initDataRaw]);
 
   const userRows = useMemo<DisplayDataRow[] | undefined>(() => {
-    return initDataState && initDataState.user
-      ? getUserRows(initDataState.user)
-      : undefined;
+    return initDataState && initDataState.user ? getUserRows(initDataState.user) : undefined;
   }, [initDataState]);
 
   const receiverRows = useMemo<DisplayDataRow[] | undefined>(() => {
@@ -56,10 +54,7 @@ export const InitDataPage: FC = () => {
   if (!initDataRows) {
     return (
       <Page>
-        <Placeholder
-          header="Oops"
-          description="Application was launched with missing init data"
-        >
+        <Placeholder header="Oops" description="Application was launched with missing init data">
           <img
             alt="Telegram sticker"
             src="https://xelene.me/telegram.gif"
@@ -72,10 +67,10 @@ export const InitDataPage: FC = () => {
   return (
     <Page>
       <List>
-        <DisplayData header={'Init Data'} rows={initDataRows}/>
-        {userRows && <DisplayData header={'User'} rows={userRows}/>}
-        {receiverRows && <DisplayData header={'Receiver'} rows={receiverRows}/>}
-        {chatRows && <DisplayData header={'Chat'} rows={chatRows}/>}
+        <DisplayData header={'Init Data'} rows={initDataRows} />
+        {userRows && <DisplayData header={'User'} rows={userRows} />}
+        {receiverRows && <DisplayData header={'Receiver'} rows={receiverRows} />}
+        {chatRows && <DisplayData header={'Chat'} rows={chatRows} />}
       </List>
     </Page>
   );

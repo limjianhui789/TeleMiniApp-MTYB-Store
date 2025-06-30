@@ -4,7 +4,7 @@
 
 import { EventEmitter } from '../utils/EventEmitter';
 import { Logger } from '../utils/Logger';
-import { PluginContext, DeliveryResult } from '../../types';
+import { type PluginContext, type DeliveryResult } from '../../types';
 
 // ============================================================================
 // Plugin Event Types
@@ -18,22 +18,22 @@ export interface PluginEventMap {
   'plugin:disabled': { pluginId: string; timestamp: Date };
   'plugin:initialized': { pluginId: string; timestamp: Date };
   'plugin:error': { pluginId: string; error: Error; timestamp: Date };
-  
+
   // Plugin Execution Events
   'plugin:execution:start': { pluginId: string; context: PluginContext; timestamp: Date };
   'plugin:execution:success': { pluginId: string; result: DeliveryResult; timestamp: Date };
   'plugin:execution:error': { pluginId: string; error: Error; timestamp: Date };
   'plugin:execution:timeout': { pluginId: string; timeout: number; timestamp: Date };
-  
+
   // Plugin Health Events
   'plugin:health:check': { pluginId: string; status: 'healthy' | 'unhealthy'; timestamp: Date };
   'plugin:health:degraded': { pluginId: string; reason: string; timestamp: Date };
   'plugin:health:recovered': { pluginId: string; timestamp: Date };
-  
+
   // Plugin Communication Events
   'plugin:message': { fromPlugin: string; toPlugin: string; message: any; timestamp: Date };
   'plugin:broadcast': { fromPlugin: string; message: any; timestamp: Date };
-  
+
   // System Events
   'system:plugin:reload': { pluginId: string; timestamp: Date };
   'system:plugin:cleanup': { pluginId: string; timestamp: Date };
@@ -146,7 +146,12 @@ export class PluginEventEmitter extends EventEmitter {
   // ============================================================================
 
   emitPluginMessage(fromPlugin: string, toPlugin: string, message: any): void {
-    this.emitPluginEvent('plugin:message', { fromPlugin, toPlugin, message, timestamp: new Date() });
+    this.emitPluginEvent('plugin:message', {
+      fromPlugin,
+      toPlugin,
+      message,
+      timestamp: new Date(),
+    });
   }
 
   emitPluginBroadcast(fromPlugin: string, message: any): void {
@@ -177,7 +182,7 @@ export class PluginEventEmitter extends EventEmitter {
     this.eventHistory.push({
       event,
       data,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     // Trim history if it exceeds max size
@@ -197,14 +202,19 @@ export class PluginEventEmitter extends EventEmitter {
     return [...this.eventHistory];
   }
 
-  getEventHistoryForPlugin(pluginId: string, limit?: number): Array<{
+  getEventHistoryForPlugin(
+    pluginId: string,
+    limit?: number
+  ): Array<{
     event: keyof PluginEventMap;
     data: any;
     timestamp: Date;
   }> {
     const pluginEvents = this.eventHistory.filter(entry => {
-      const data = entry.data as any;
-      return data.pluginId === pluginId || data.fromPlugin === pluginId || data.toPlugin === pluginId;
+      const data = entry.data;
+      return (
+        data.pluginId === pluginId || data.fromPlugin === pluginId || data.toPlugin === pluginId
+      );
     });
 
     if (limit) {
@@ -261,7 +271,7 @@ export class PluginEventEmitter extends EventEmitter {
   } {
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-    
+
     const eventsByType: Record<string, number> = {};
     let recentEvents = 0;
 
@@ -275,7 +285,7 @@ export class PluginEventEmitter extends EventEmitter {
     return {
       totalEvents: this.eventHistory.length,
       eventsByType,
-      recentEvents
+      recentEvents,
     };
   }
 }

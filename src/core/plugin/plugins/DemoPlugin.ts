@@ -3,7 +3,17 @@
 // ============================================================================
 
 import { BasePlugin } from '../../../types/plugin';
-import { PluginConfig, PluginContext, DeliveryResult, ValidationResult, ProductCategory, PluginStatus, ValidationError, ValidationWarning, PluginHealthStatus } from '../../../types';
+import {
+  type PluginConfig,
+  type PluginContext,
+  type DeliveryResult,
+  type ValidationResult,
+  ProductCategory,
+  PluginStatus,
+  type ValidationError,
+  type ValidationWarning,
+  type PluginHealthStatus,
+} from '../../../types';
 import { Logger } from '../../utils/Logger';
 
 // ============================================================================
@@ -27,10 +37,20 @@ export class DemoPlugin extends BasePlugin {
       supportedFeatures: ['basic-delivery', 'health-check', 'configuration'],
       configSchema: {
         demoApiKey: { type: 'string', required: false, description: 'Demo API key for testing' },
-        deliveryDelay: { type: 'number', required: false, default: 1000, description: 'Simulated delivery delay in ms' },
-        failureRate: { type: 'number', required: false, default: 0, description: 'Simulated failure rate (0-1)' }
-      }
-    }
+        deliveryDelay: {
+          type: 'number',
+          required: false,
+          default: 1000,
+          description: 'Simulated delivery delay in ms',
+        },
+        failureRate: {
+          type: 'number',
+          required: false,
+          default: 0,
+          description: 'Simulated failure rate (0-1)',
+        },
+      },
+    },
   };
 
   constructor() {
@@ -71,30 +91,34 @@ export class DemoPlugin extends BasePlugin {
           errors.push({
             field: 'deliveryDelay',
             message: 'deliveryDelay must be a non-negative number',
-            code: 'INVALID_TYPE'
+            code: 'INVALID_TYPE',
           });
         } else if (config.deliveryDelay > 10000) {
           warnings.push({
             field: 'deliveryDelay',
             message: 'deliveryDelay is very high (>10s), this may affect user experience',
-            code: 'HIGH_VALUE'
+            code: 'HIGH_VALUE',
           });
         }
       }
 
       // Validate failure rate
       if (config.failureRate !== undefined) {
-        if (typeof config.failureRate !== 'number' || config.failureRate < 0 || config.failureRate > 1) {
+        if (
+          typeof config.failureRate !== 'number' ||
+          config.failureRate < 0 ||
+          config.failureRate > 1
+        ) {
           errors.push({
             field: 'failureRate',
             message: 'failureRate must be a number between 0 and 1',
-            code: 'INVALID_RANGE'
+            code: 'INVALID_RANGE',
           });
         } else if (config.failureRate > 0.1) {
           warnings.push({
             field: 'failureRate',
             message: 'failureRate is high (>10%), this may cause frequent failures',
-            code: 'HIGH_VALUE'
+            code: 'HIGH_VALUE',
           });
         }
       }
@@ -105,13 +129,13 @@ export class DemoPlugin extends BasePlugin {
           errors.push({
             field: 'demoApiKey',
             message: 'demoApiKey must be a string',
-            code: 'INVALID_TYPE'
+            code: 'INVALID_TYPE',
           });
         } else if (config.demoApiKey.length < 10) {
           warnings.push({
             field: 'demoApiKey',
             message: 'demoApiKey seems too short, ensure it is valid',
-            code: 'SHORT_VALUE'
+            code: 'SHORT_VALUE',
           });
         }
       }
@@ -120,23 +144,25 @@ export class DemoPlugin extends BasePlugin {
       return {
         isValid: errors.length === 0,
         errors,
-        warnings
+        warnings,
       };
     } catch (error) {
       this.logger.error('Configuration validation failed:', error as Error);
       return {
         isValid: false,
-        errors: [{
-          field: 'general',
-          message: `Configuration validation error: ${(error as Error).message}`,
-          code: 'VALIDATION_ERROR'
-        }],
-        warnings
+        errors: [
+          {
+            field: 'general',
+            message: `Configuration validation error: ${(error as Error).message}`,
+            code: 'VALIDATION_ERROR',
+          },
+        ],
+        warnings,
       };
     }
   }
 
-  async cleanup(): Promise<void> {
+  override async cleanup(): Promise<void> {
     try {
       this.logger.info('Cleaning up Demo Plugin...');
 
@@ -155,7 +181,7 @@ export class DemoPlugin extends BasePlugin {
   // Core Functionality
   // ============================================================================
 
-  async processOrder(context: PluginContext): Promise<DeliveryResult> {
+  override async processOrder(context: PluginContext): Promise<DeliveryResult> {
     try {
       if (!this.isInitialized) {
         throw new Error('Plugin is not initialized');
@@ -180,16 +206,17 @@ export class DemoPlugin extends BasePlugin {
         demoCredentials: {
           username: `demo_user_${Date.now()}`,
           password: this.generateRandomPassword(),
-          accessToken: this.generateRandomToken()
+          accessToken: this.generateRandomToken(),
         },
-        instructions: 'This is a demo delivery. Use the provided credentials to access your demo service.',
+        instructions:
+          'This is a demo delivery. Use the provided credentials to access your demo service.',
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
         demoInfo: {
           orderId: context.order.id,
           productName: context.product.name,
           processedAt: new Date(),
-          pluginVersion: this.config.version
-        }
+          pluginVersion: this.config.version,
+        },
       };
 
       this.logger.info(`Order processed successfully: ${context.order.id}`);
@@ -200,8 +227,8 @@ export class DemoPlugin extends BasePlugin {
           processingTime: deliveryDelay,
           pluginId: this.config.id,
           timestamp: new Date(),
-          message: 'Demo product delivered successfully! This is a test delivery.'
-        }
+          message: 'Demo product delivered successfully! This is a test delivery.',
+        },
       };
     } catch (error) {
       this.logger.error(`Order processing failed: ${context.order.id}`, error as Error);
@@ -211,13 +238,13 @@ export class DemoPlugin extends BasePlugin {
         error: `Demo delivery failed: ${(error as Error).message}`,
         metadata: {
           pluginId: this.config.id,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       };
     }
   }
 
-  async validateProduct(productData: Record<string, any>): Promise<ValidationResult> {
+  override async validateProduct(productData: Record<string, any>): Promise<ValidationResult> {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
@@ -227,7 +254,7 @@ export class DemoPlugin extends BasePlugin {
         errors.push({
           field: 'name',
           message: 'Product name is required',
-          code: 'REQUIRED_FIELD'
+          code: 'REQUIRED_FIELD',
         });
       }
 
@@ -235,7 +262,7 @@ export class DemoPlugin extends BasePlugin {
         errors.push({
           field: 'price',
           message: 'Product price must be greater than 0',
-          code: 'INVALID_VALUE'
+          code: 'INVALID_VALUE',
         });
       }
 
@@ -244,7 +271,7 @@ export class DemoPlugin extends BasePlugin {
         warnings.push({
           field: 'category',
           message: 'Demo plugin is optimized for digital goods category',
-          code: 'CATEGORY_MISMATCH'
+          code: 'CATEGORY_MISMATCH',
         });
       }
 
@@ -252,18 +279,20 @@ export class DemoPlugin extends BasePlugin {
       return {
         isValid: errors.length === 0,
         errors,
-        warnings
+        warnings,
       };
     } catch (error) {
       this.logger.error('Product validation failed:', error as Error);
       return {
         isValid: false,
-        errors: [{
-          field: 'general',
-          message: `Product validation error: ${(error as Error).message}`,
-          code: 'VALIDATION_ERROR'
-        }],
-        warnings
+        errors: [
+          {
+            field: 'general',
+            message: `Product validation error: ${(error as Error).message}`,
+            code: 'VALIDATION_ERROR',
+          },
+        ],
+        warnings,
       };
     }
   }
@@ -272,15 +301,15 @@ export class DemoPlugin extends BasePlugin {
   // Optional Hook Methods
   // ============================================================================
 
-  async onOrderCreated(context: PluginContext): Promise<void> {
+  override async onOrderCreated(context: PluginContext): Promise<void> {
     this.logger.info(`Demo Plugin: Order created - ${context.order.id}`);
   }
 
-  async onPaymentCompleted(context: PluginContext): Promise<void> {
+  override async onPaymentCompleted(context: PluginContext): Promise<void> {
     this.logger.info(`Demo Plugin: Payment completed - ${context.order.id}`);
   }
 
-  async onOrderCancelled(context: PluginContext): Promise<void> {
+  override async onOrderCancelled(context: PluginContext): Promise<void> {
     this.logger.info(`Demo Plugin: Order cancelled - ${context.order.id}`);
   }
 
@@ -288,7 +317,7 @@ export class DemoPlugin extends BasePlugin {
   // Health Check
   // ============================================================================
 
-  async healthCheck(): Promise<PluginHealthStatus> {
+  override async healthCheck(): Promise<PluginHealthStatus> {
     const startTime = Date.now();
 
     try {
@@ -302,7 +331,7 @@ export class DemoPlugin extends BasePlugin {
           isHealthy: false,
           lastCheck: new Date(),
           error: 'Plugin not initialized',
-          responseTime: Date.now() - startTime
+          responseTime: Date.now() - startTime,
         };
       }
 
@@ -314,7 +343,7 @@ export class DemoPlugin extends BasePlugin {
           isHealthy: false,
           lastCheck: new Date(),
           error: 'Simulated health check failure',
-          responseTime: Date.now() - startTime
+          responseTime: Date.now() - startTime,
         };
       }
 
@@ -322,7 +351,7 @@ export class DemoPlugin extends BasePlugin {
       return {
         isHealthy: true,
         lastCheck: new Date(),
-        responseTime: Date.now() - startTime
+        responseTime: Date.now() - startTime,
       };
     } catch (error) {
       this.logger.error('Demo Plugin health check failed:', error as Error);
@@ -330,7 +359,7 @@ export class DemoPlugin extends BasePlugin {
         isHealthy: false,
         lastCheck: new Date(),
         error: (error as Error).message,
-        responseTime: Date.now() - startTime
+        responseTime: Date.now() - startTime,
       };
     }
   }

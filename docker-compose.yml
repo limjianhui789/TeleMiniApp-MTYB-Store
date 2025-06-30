@@ -1,0 +1,91 @@
+# ============================================================================
+# MTYB Shop - Docker Compose Configuration
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # Frontend application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: mtyb-shop-app
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env.production
+    volumes:
+      - ./logs:/var/log/nginx
+    networks:
+      - mtyb-network
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # API backend (placeholder for future backend service)
+  api:
+    image: nginx:alpine
+    container_name: mtyb-shop-api
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    volumes:
+      - ./api-placeholder.html:/usr/share/nginx/html/index.html:ro
+    networks:
+      - mtyb-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for session storage (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: mtyb-shop-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - mtyb-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring with Nginx Prometheus Exporter
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:0.10.0
+    container_name: mtyb-shop-metrics
+    restart: unless-stopped
+    ports:
+      - "9113:9113"
+    command:
+      - '-nginx.scrape-uri=http://app:80/nginx_status'
+    networks:
+      - mtyb-network
+    depends_on:
+      - app
+
+networks:
+  mtyb-network:
+    driver: bridge
+    name: mtyb-network
+
+volumes:
+  redis-data:
+    name: mtyb-redis-data

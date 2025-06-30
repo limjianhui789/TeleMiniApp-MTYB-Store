@@ -3,7 +3,7 @@
 // ============================================================================
 
 import React, { useEffect, useState } from 'react';
-import { Notification } from '../../types';
+import { type Notification } from '../../types';
 import './NotificationToast.css';
 
 export interface NotificationToastProps {
@@ -15,7 +15,7 @@ export interface NotificationToastProps {
 export const NotificationToast: React.FC<NotificationToastProps> = ({
   notification,
   onClose,
-  autoClose = true
+  autoClose = true,
 }) => {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -27,6 +27,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
 
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [notification.duration, autoClose]);
 
   const handleClose = () => {
@@ -36,24 +37,22 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
     }, 300); // Wait for animation to complete
   };
 
-
-
   return (
-    <div className={`notification-toast ${isVisible ? 'visible' : 'hidden'} notification-toast--${notification.type}`}>
-      <div style={{
-        padding: '12px 16px',
-        backgroundColor: 'var(--tg-theme-bg-color)',
-        border: '1px solid var(--tg-theme-hint-color)',
-        borderRadius: '8px',
-        marginBottom: '8px',
-        position: 'relative'
-      }}>
-        <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-          {notification.title}
-        </div>
-        <div style={{ fontSize: '14px', opacity: 0.8 }}>
-          {notification.message}
-        </div>
+    <div
+      className={`notification-toast ${isVisible ? 'visible' : 'hidden'} notification-toast--${notification.type}`}
+    >
+      <div
+        style={{
+          padding: '12px 16px',
+          backgroundColor: 'var(--tg-theme-bg-color)',
+          border: '1px solid var(--tg-theme-hint-color)',
+          borderRadius: '8px',
+          marginBottom: '8px',
+          position: 'relative',
+        }}
+      >
+        <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{notification.title}</div>
+        <div style={{ fontSize: '14px', opacity: 0.8 }}>{notification.message}</div>
         <button
           onClick={handleClose}
           style={{
@@ -64,7 +63,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
             border: 'none',
             fontSize: '16px',
             cursor: 'pointer',
-            color: 'var(--tg-theme-hint-color)'
+            color: 'var(--tg-theme-hint-color)',
           }}
         >
           ×
@@ -85,18 +84,14 @@ export const NotificationContainer: React.FC<NotificationContainerProps> = ({
   notifications,
   onClose,
   position = 'top',
-  maxNotifications = 5
+  maxNotifications = 5,
 }) => {
   const visibleNotifications = notifications.slice(0, maxNotifications);
 
   return (
     <div className={`notification-container notification-container--${position}`}>
-      {visibleNotifications.map((notification) => (
-        <NotificationToast
-          key={notification.id}
-          notification={notification}
-          onClose={onClose}
-        />
+      {visibleNotifications.map(notification => (
+        <NotificationToast key={notification.id} notification={notification} onClose={onClose} />
       ))}
     </div>
   );

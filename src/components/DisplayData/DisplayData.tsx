@@ -10,12 +10,10 @@ import './DisplayData.css';
 
 const [, e] = bem('display-data');
 
-export type DisplayDataRow =
-  & { title: string }
-  & (
+export type DisplayDataRow = { title: string } & (
   | { type: 'link'; value?: string }
   | { value: ReactNode }
-  )
+);
 
 export interface DisplayDataProps {
   header?: ReactNode;
@@ -34,27 +32,17 @@ export const DisplayData: FC<DisplayDataProps> = ({ header, rows }) => (
         if ('type' in item) {
           valueNode = <Link to={item.value}>Open</Link>;
         } else if (typeof item.value === 'string') {
-          valueNode = isRGB(item.value)
-            ? <RGB color={item.value}/>
-            : item.value;
+          valueNode = isRGB(item.value) ? <RGB color={item.value} /> : item.value;
         } else if (typeof item.value === 'boolean') {
-          valueNode = <Checkbox checked={item.value} disabled/>;
+          valueNode = <Checkbox checked={item.value} disabled />;
         } else {
           valueNode = item.value;
         }
       }
 
       return (
-        <Cell
-          className={e('line')}
-          subhead={item.title}
-          readOnly
-          multiline={true}
-          key={idx}
-        >
-          <span className={e('line-value')}>
-            {valueNode}
-          </span>
+        <Cell className={e('line')} subhead={item.title} readOnly multiline={true} key={idx}>
+          <span className={e('line-value')}>{valueNode}</span>
         </Cell>
       );
     })}

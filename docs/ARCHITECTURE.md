@@ -2,7 +2,8 @@
 
 ## 项目概述
 
-MTYB Virtual Goods Platform 是一个基于 Telegram Mini App 的虚拟商品购买平台，采用插件化架构设计，支持多种类型的虚拟商品销售和自动化交付。
+MTYB Virtual Goods Platform 是一个基于 Telegram Mini
+App 的虚拟商品购买平台，采用插件化架构设计，支持多种类型的虚拟商品销售和自动化交付。
 
 ## 核心特性
 
@@ -53,17 +54,20 @@ MTYB Virtual Goods Platform 是一个基于 Telegram Mini App 的虚拟商品购
 ### 2. 核心组件
 
 #### 2.1 Frontend Layer (前端层)
+
 - **Product Pages**: 产品展示、分类、搜索
 - **Order Pages**: 订单管理、历史记录、状态跟踪
 - **Payment Pages**: 支付流程、支付状态、收据
 
 #### 2.2 Core System (核心系统)
+
 - **Product Manager**: 产品管理、库存控制、价格管理
 - **Order Manager**: 订单创建、状态管理、交付协调
 - **Payment Gateway**: Curlec 支付集成、支付验证、退款处理
 - **Plugin Manager**: 插件注册、生命周期管理、通信协调
 
 #### 2.3 Plugin Layer (插件层)
+
 - **Base Plugin Interface**: 统一的插件接口规范
 - **Product-Specific Plugins**: 各类产品的专用插件
 - **Plugin Registry**: 插件注册和发现机制
@@ -76,20 +80,20 @@ MTYB Virtual Goods Platform 是一个基于 Telegram Mini App 的虚拟商品购
 interface BasePlugin {
   // 插件配置
   config: PluginConfig;
-  
+
   // 生命周期方法
   initialize(config: Record<string, any>): Promise<void>;
   validateConfig(config: Record<string, any>): Promise<ValidationResult>;
-  
+
   // 核心功能
   processOrder(context: PluginContext): Promise<DeliveryResult>;
   validateProduct(productData: Record<string, any>): Promise<ValidationResult>;
-  
+
   // 可选钩子
   onOrderCreated?(context: PluginContext): Promise<void>;
   onPaymentCompleted?(context: PluginContext): Promise<void>;
   onOrderCancelled?(context: PluginContext): Promise<void>;
-  
+
   // 健康检查
   healthCheck?(): Promise<boolean>;
 }
@@ -98,16 +102,19 @@ interface BasePlugin {
 ### 2. 插件类型示例
 
 #### VPN Plugin
+
 - **功能**: 连接到 VPN 服务器 API 创建用户账户
 - **配置**: API 端点、认证密钥、服务器列表
 - **交付**: 用户名、密码、服务器配置文件
 
-#### Netflix Plugin  
+#### Netflix Plugin
+
 - **功能**: 通过邮件系统获取账户信息
 - **配置**: 邮件服务器、账户池管理
 - **交付**: 账户邮箱、密码、使用说明
 
 #### Steam Plugin
+
 - **功能**: 集成 KeyAuth 系统获取游戏密钥
 - **配置**: KeyAuth API、产品映射
 - **交付**: 游戏激活码、安装说明
@@ -135,7 +142,7 @@ export class CustomPlugin extends BasePlugin {
       success: true,
       deliveryData: {
         // 交付数据
-      }
+      },
     };
   }
 
@@ -196,11 +203,11 @@ interface Order {
 
 ```typescript
 enum OrderStatus {
-  PENDING = 'pending',           // 待支付
-  PROCESSING = 'processing',     // 处理中
-  COMPLETED = 'completed',       // 已完成
-  FAILED = 'failed',            // 失败
-  REFUNDED = 'refunded'         // 已退款
+  PENDING = 'pending', // 待支付
+  PROCESSING = 'processing', // 处理中
+  COMPLETED = 'completed', // 已完成
+  FAILED = 'failed', // 失败
+  REFUNDED = 'refunded', // 已退款
 }
 
 enum ProductCategory {
@@ -208,7 +215,7 @@ enum ProductCategory {
   STREAMING = 'streaming',
   GAMING = 'gaming',
   SOFTWARE = 'software',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 ```
 
@@ -234,16 +241,19 @@ enum ProductCategory {
 ## 安全考虑
 
 ### 1. 数据安全
+
 - 敏感配置信息加密存储
 - API 密钥安全管理
 - 用户数据隐私保护
 
 ### 2. 支付安全
+
 - Webhook 签名验证
 - 支付状态双重验证
 - 防重复支付机制
 
 ### 3. 插件安全
+
 - 插件沙箱执行环境
 - 配置验证和清理
 - 错误处理和日志记录
@@ -251,6 +261,7 @@ enum ProductCategory {
 ## 技术栈
 
 ### Frontend
+
 - **React 18** - 用户界面框架
 - **TypeScript** - 类型安全
 - **Telegram UI** - 原生 Telegram 组件
@@ -258,11 +269,13 @@ enum ProductCategory {
 - **Vite** - 构建工具
 
 ### Core System
+
 - **Plugin Architecture** - 插件化架构
 - **State Management** - 状态管理
 - **API Integration** - 外部服务集成
 
 ### External Services
+
 - **Curlec Payment Gateway** - 支付处理
 - **Telegram Bot API** - 消息通知
 - **Various Product APIs** - 产品特定服务
@@ -270,11 +283,13 @@ enum ProductCategory {
 ## 部署架构
 
 ### 1. 开发环境
+
 - 本地开发服务器 (Vite)
 - Mock 支付网关
 - 插件热重载
 
 ### 2. 生产环境
+
 - GitHub Pages 静态托管
 - CDN 加速
 - 环境变量管理
@@ -283,16 +298,19 @@ enum ProductCategory {
 ## 扩展性设计
 
 ### 1. 水平扩展
+
 - 插件独立开发和部署
 - 微服务架构支持
 - API 版本管理
 
 ### 2. 功能扩展
+
 - 新产品类型快速接入
 - 多支付网关支持
 - 多语言国际化
 
 ### 3. 性能优化
+
 - 组件懒加载
 - 数据缓存策略
 - 批量操作支持

@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)",
+      "Bash(rg:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run check:*)",
+      "Bash(touch:*)",
+      "Bash(find:*)",
+      "Bash(node:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run lint)",
+      "Bash(rm:*)",
+      "Bash(sed:*)",
+      "Bash(npm run format:*)",
+      "Bash(grep:*)",
+      "Bash(mv:*)",
+      "Bash(chmod:*)",
+      "Bash(npx vite build:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run:*)"
+    ],
+    "deny": []
+  }
+}

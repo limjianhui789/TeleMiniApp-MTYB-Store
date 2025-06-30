@@ -46,17 +46,17 @@ export class ConfigManager {
   set(key: string, value: any, encrypted: boolean = false): void {
     const namespace = this.extractNamespace(key);
     const schema = this.schemas.get(namespace);
-    
+
     if (schema) {
       const fieldName = this.extractFieldName(key);
       const fieldSchema = schema[fieldName];
-      
+
       if (fieldSchema) {
         // Validate type
         if (!this.validateType(value, fieldSchema.type)) {
           throw new Error(`Invalid type for ${key}. Expected ${fieldSchema.type}`);
         }
-        
+
         // Run custom validator if provided
         if (fieldSchema.validator && !fieldSchema.validator(value)) {
           throw new Error(`Validation failed for ${key}`);
@@ -68,32 +68,32 @@ export class ConfigManager {
       value: encrypted ? this.encrypt(value) : value,
       type: this.getValueType(value),
       encrypted,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
 
     this.configs.set(key, configValue);
     this.saveToStorage();
-    
+
     logger.debug(`Config set: ${key}`, { encrypted });
   }
 
   get<T = any>(key: string, defaultValue?: T): T | undefined {
     const config = this.configs.get(key);
-    
+
     if (!config) {
       // Try to get default from schema
       const namespace = this.extractNamespace(key);
       const schema = this.schemas.get(namespace);
-      
+
       if (schema) {
         const fieldName = this.extractFieldName(key);
         const fieldSchema = schema[fieldName];
-        
+
         if (fieldSchema && fieldSchema.default !== undefined) {
           return fieldSchema.default;
         }
       }
-      
+
       return defaultValue;
     }
 
@@ -116,16 +116,17 @@ export class ConfigManager {
 
   clear(namespace?: string): void {
     if (namespace) {
-      const keysToDelete = Array.from(this.configs.keys())
-        .filter(key => key.startsWith(`${namespace}.`));
-      
+      const keysToDelete = Array.from(this.configs.keys()).filter(key =>
+        key.startsWith(`${namespace}.`)
+      );
+
       keysToDelete.forEach(key => this.configs.delete(key));
       logger.debug(`Cleared configs for namespace: ${namespace}`);
     } else {
       this.configs.clear();
       logger.debug('Cleared all configs');
     }
-    
+
     this.saveToStorage();
   }
 
@@ -148,14 +149,14 @@ export class ConfigManager {
   getNamespaceConfigs(namespace: string): Record<string, any> {
     const result: Record<string, any> = {};
     const prefix = `${namespace}.`;
-    
+
     for (const [key, config] of this.configs.entries()) {
       if (key.startsWith(prefix)) {
         const fieldName = key.substring(prefix.length);
         result[fieldName] = config.encrypted ? this.decrypt(config.value) : config.value;
       }
     }
-    
+
     return result;
   }
 
@@ -183,7 +184,7 @@ export class ConfigManager {
         if (!this.validateType(value, fieldSchema.type)) {
           errors.push(`Invalid type for ${field}. Expected ${fieldSchema.type}`);
         }
-        
+
         if (fieldSchema.validator && !fieldSchema.validator(value)) {
           errors.push(`Validation failed for ${field}`);
         }
@@ -192,7 +193,7 @@ export class ConfigManager {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -211,13 +212,15 @@ export class ConfigManager {
       const data = localStorage.getItem(this.storageKey);
       if (data) {
         const parsed = JSON.parse(data);
-        this.configs = new Map(Object.entries(parsed).map(([key, value]: [string, any]) => [
-          key,
-          {
-            ...value,
-            lastUpdated: new Date(value.lastUpdated)
-          }
-        ]));
+        this.configs = new Map(
+          Object.entries(parsed).map(([key, value]: [string, any]) => [
+            key,
+            {
+              ...value,
+              lastUpdated: new Date(value.lastUpdated),
+            },
+          ])
+        );
       }
     } catch (error) {
       logger.error('Failed to load configs from storage', error as Error);
@@ -227,7 +230,7 @@ export class ConfigManager {
   // Utility methods
   private extractNamespace(key: string): string {
     const parts = key.split('.');
-    return parts.length > 1 ? parts[0] : '';
+    return parts.length > 1 ? parts[0] || '' : '';
   }
 
   private extractFieldName(key: string): string {

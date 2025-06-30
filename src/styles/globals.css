@@ -1,0 +1,374 @@
+/* ============================================================================ */
+/* MTYB Virtual Goods Platform - Global Styles */
+/* ============================================================================ */
+
+/* Import Design System and Themes */
+@import url('./design-system.css');
+@import url('./themes.css');
+
+/* Base Reset and Typography */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  font-weight: var(--font-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Enhanced Font System for Telegram Mini Apps */
+:root {
+  /* Font Families */
+  --font-system:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-telegram: 'SF Pro Display', 'SF Pro Text', var(--font-system);
+  --font-mono:
+    'SF Mono', 'Monaco', 'Menlo', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+
+  /* Enhanced color compatibility for various Telegram themes */
+  --color-background: var(--tg-bg-color, #ffffff);
+  --color-surface: var(--tg-section-bg-color, #ffffff);
+  --color-surface-secondary: var(--tg-secondary-bg-color, #f8f9fa);
+  --color-surface-elevated: color-mix(
+    in srgb,
+    var(--tg-bg-color, #ffffff) 95%,
+    var(--tg-text-color, #000000) 5%
+  );
+
+  /* Enhanced text colors */
+  --color-text-primary: var(--tg-text-color, #000000);
+  --color-text-secondary: var(--tg-hint-color, #6b7280);
+  --color-text-accent: var(--tg-accent-text-color, #3b82f6);
+  --color-text-destructive: var(--tg-destructive-text-color, #ef4444);
+  --color-text-on-primary: var(--tg-button-text-color, #ffffff);
+
+  /* Interactive colors */
+  --color-primary: var(--tg-button-color, #3b82f6);
+  --color-link: var(--tg-link-color, #3b82f6);
+
+  /* Border and divider colors */
+  --color-border: color-mix(in srgb, var(--tg-hint-color, #d1d5db) 40%, transparent);
+  --color-border-light: color-mix(in srgb, var(--tg-hint-color, #d1d5db) 20%, transparent);
+  --color-divider: color-mix(in srgb, var(--tg-hint-color, #d1d5db) 30%, transparent);
+}
+
+/* Typography Enhancement */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary);
+}
+
+h1 {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+}
+
+h2 {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
+}
+
+h3 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+}
+
+h4 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-medium);
+}
+
+h5 {
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+}
+
+h6 {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+p {
+  margin: 0;
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-primary);
+}
+
+small {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Form Elements Enhancement */
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: var(--text-base);
+}
+
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  color: var(--color-text-secondary);
+}
+
+input::-moz-placeholder,
+textarea::-moz-placeholder {
+  color: var(--color-text-secondary);
+  opacity: 1;
+}
+
+input:-ms-input-placeholder,
+textarea:-ms-input-placeholder {
+  color: var(--color-text-secondary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-secondary);
+}
+
+/* Custom Scrollbar for Telegram Mini Apps */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+  transition: background-color var(--duration-150) var(--ease-in-out);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+/* Selection styles */
+::selection {
+  background: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  color: var(--color-text-primary);
+}
+
+::-moz-selection {
+  background: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  color: var(--color-text-primary);
+}
+
+/* Enhanced Link Styles */
+a {
+  color: var(--color-link);
+  text-decoration: none;
+  transition: color var(--duration-150) var(--ease-in-out);
+}
+
+a:hover {
+  color: var(--color-hover);
+  text-decoration: underline;
+}
+
+a:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-sm);
+}
+
+/* Enhanced Button Base */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Enhanced Focus Styles */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Telegram Mini App Specific Enhancements */
+.tg-viewport {
+  min-height: 100vh;
+  min-height: 100svh; /* Support for small viewport height units */
+}
+
+/* Safe Area Handling for iOS */
+.safe-area-inset {
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+}
+
+/* Haptic Feedback Enhancement */
+.haptic-light {
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+}
+
+.haptic-light:active {
+  transform: scale(0.98);
+  transition: transform var(--duration-75) var(--ease-out);
+}
+
+/* iOS-style smooth scrolling */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Enhanced Animation Support */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-in {
+    animation: fadeIn var(--duration-300) var(--ease-out);
+  }
+
+  .animate-slide-up {
+    animation: slideUp var(--duration-300) var(--ease-out);
+  }
+
+  .animate-scale-in {
+    animation: scaleIn var(--duration-200) var(--ease-out);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-4));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive Typography */
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: var(--text-2xl);
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+}
+
+/* Dark Mode Support (if Telegram provides it) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* High Contrast Support */
+@media (prefers-contrast: high) {
+  :root {
+    --color-border: var(--color-text-primary);
+    --focus-ring-width: 3px;
+  }
+}
