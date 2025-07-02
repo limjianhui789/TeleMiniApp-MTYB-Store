@@ -1,6 +1,5 @@
-import crypto from 'crypto';
+// Browser-compatible crypto implementation
 import bcrypt from 'bcryptjs';
-import { promisify } from 'util';
 
 export interface SecurityConfig {
   encryption: {
@@ -39,62 +38,91 @@ export interface SecurityAudit {
 
 export class SecurityService {
   private readonly config: SecurityConfig;
-  private readonly encryptionKey: Buffer;
+  private encryptionKey?: CryptoKey;
   private securityAudits: SecurityAudit[] = [];
   private rateLimitStore: Map<string, { count: number; resetTime: number }> = new Map();
 
   constructor() {
     this.config = {
       encryption: {
-        algorithm: 'aes-256-gcm',
-        keyLength: 32,
-        ivLength: 16
+        algorithm: 'AES-GCM',
+        keyLength: 256,
+        ivLength: 12
       },
       hashing: {
         saltRounds: 12,
-        algorithm: 'sha256'
+        algorithm: 'bcrypt'
       },
       rateLimit: {
-        windowMs: 60 * 1000, // 1 minute
+        windowMs: 15 * 60 * 1000, // 15 minutes
         maxRequests: 100
       },
       session: {
-        secret: process.env.SESSION_SECRET || crypto.randomBytes(64).toString('hex'),
+        secret: this.generateRandomString(64),
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
       }
     };
 
-    // Initialize encryption key from environment or generate one
-    const key = process.env.ENCRYPTION_KEY;
-    if (key) {
-      this.encryptionKey = Buffer.from(key, 'hex');
-    } else {
-      this.encryptionKey = crypto.randomBytes(this.config.encryption.keyLength);
-      console.warn('⚠️ No ENCRYPTION_KEY environment variable found. Generated a new key.');
-      console.warn('⚠️ Set ENCRYPTION_KEY=' + this.encryptionKey.toString('hex'));
+    this.initializeEncryption();
+  }
+
+  private async initializeEncryption(): Promise<void> {
+    try {
+      // Generate or import encryption key
+      this.encryptionKey = await window.crypto.subtle.generateKey(
+        {
+          name: 'AES-GCM',
+          length: this.config.encryption.keyLength,
+        },
+        true, // extractable
+        ['encrypt', 'decrypt']
+      );
+    } catch (error) {
+      console.warn('Failed to initialize Web Crypto API:', error);
     }
   }
 
-  // Encryption and Decryption
-  encrypt(data: string): EncryptionResult {
-    try {
-      const iv = crypto.randomBytes(this.config.encryption.ivLength);
-      const cipher = crypto.createCipher(this.config.encryption.algorithm, this.encryptionKey);
-      
-      let encrypted = cipher.update(data, 'utf8', 'hex');
-      encrypted += cipher.final('hex');
-      
-      const result: EncryptionResult = {
-        encrypted,
-        iv: iv.toString('hex')
-      };
+  // Browser-compatible random generation
+  private generateRandomBytes(length: number): Uint8Array {
+    return window.crypto.getRandomValues(new Uint8Array(length));
+  }
 
-      // Add authentication tag for GCM mode
-      if (this.config.encryption.algorithm.includes('gcm')) {
-        result.tag = (cipher as any).getAuthTag().toString('hex');
+  private generateRandomString(length: number): string {
+    const bytes = this.generateRandomBytes(Math.ceil(length / 2));
+    return Array.from(bytes)
+      .map(byte => byte.toString(16).padStart(2, '0'))
+      .join('')
+      .substring(0, length);
+  }
+
+  // Encryption and Decryption using Web Crypto API
+  async encrypt(data: string): Promise<EncryptionResult> {
+    try {
+      if (!this.encryptionKey) {
+        await this.initializeEncryption();
       }
 
-      return result;
+      if (!this.encryptionKey) {
+        throw new Error('Encryption key not available');
+      }
+
+      const encoder = new TextEncoder();
+      const dataBuffer = encoder.encode(data);
+      const iv = this.generateRandomBytes(this.config.encryption.ivLength);
+
+      const encryptedBuffer = await window.crypto.subtle.encrypt(
+        {
+          name: 'AES-GCM',
+          iv: iv,
+        },
+        this.encryptionKey,
+        dataBuffer
+      );
+
+      return {
+        encrypted: this.bufferToHex(encryptedBuffer),
+        iv: this.bufferToHex(iv)
+      };
     } catch (error) {
       this.auditSecurityEvent('encryption_failed', 'medium', {
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -103,28 +131,51 @@ export class SecurityService {
     }
   }
 
-  decrypt(encryptedData: EncryptionResult): string {
+  async decrypt(encryptedData: EncryptionResult): Promise<string> {
     try {
-      const decipher = crypto.createDecipher(
-        this.config.encryption.algorithm,
-        this.encryptionKey
-      );
-
-      // Set auth tag for GCM mode
-      if (encryptedData.tag && this.config.encryption.algorithm.includes('gcm')) {
-        (decipher as any).setAuthTag(Buffer.from(encryptedData.tag, 'hex'));
+      if (!this.encryptionKey) {
+        await this.initializeEncryption();
       }
 
-      let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
-      decrypted += decipher.final('utf8');
+      if (!this.encryptionKey) {
+        throw new Error('Encryption key not available');
+      }
 
-      return decrypted;
+      const encryptedBuffer = this.hexToBuffer(encryptedData.encrypted);
+      const iv = this.hexToBuffer(encryptedData.iv);
+
+      const decryptedBuffer = await window.crypto.subtle.decrypt(
+        {
+          name: 'AES-GCM',
+          iv: iv,
+        },
+        this.encryptionKey,
+        encryptedBuffer
+      );
+
+      const decoder = new TextDecoder();
+      return decoder.decode(decryptedBuffer);
     } catch (error) {
       this.auditSecurityEvent('decryption_failed', 'medium', {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       throw new Error('Decryption failed');
     }
+  }
+
+  // Utility functions for hex conversion
+  private bufferToHex(buffer: ArrayBuffer): string {
+    return Array.from(new Uint8Array(buffer))
+      .map(byte => byte.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  private hexToBuffer(hex: string): ArrayBuffer {
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2) {
+      bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+    }
+    return bytes.buffer;
   }
 
   // Password Hashing
@@ -153,16 +204,16 @@ export class SecurityService {
 
   // Secure random generation
   generateSecureToken(length: number = 32): string {
-    return crypto.randomBytes(length).toString('hex');
+    return this.generateRandomString(length * 2);
   }
 
   generateSecurePassword(length: number = 16): string {
     const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    const randomBytes = this.generateRandomBytes(length);
     let password = '';
     
     for (let i = 0; i < length; i++) {
-      const randomIndex = crypto.randomInt(0, charset.length);
-      password += charset[randomIndex];
+      password += charset[randomBytes[i] % charset.length];
     }
     
     return password;
@@ -170,6 +221,7 @@ export class SecurityService {
 
   // Input validation and sanitization
   sanitizeInput(input: string): string {
+    if (!input) return '';
     return input
       .replace(/[<>]/g, '') // Remove potential XSS chars
       .replace(/javascript:/gi, '') // Remove javascript: protocol
@@ -252,7 +304,7 @@ export class SecurityService {
 
   // CSRF protection
   generateCSRFToken(): string {
-    return crypto.randomBytes(32).toString('hex');
+    return this.generateRandomString(64);
   }
 
   validateCSRFToken(token: string, sessionToken: string): boolean {
@@ -262,7 +314,8 @@ export class SecurityService {
 
   // Content Security Policy
   generateCSPNonce(): string {
-    return crypto.randomBytes(16).toString('base64');
+    const bytes = this.generateRandomBytes(16);
+    return btoa(String.fromCharCode(...bytes));
   }
 
   getSecurityHeaders(nonce?: string): Record<string, string> {
@@ -477,9 +530,15 @@ export class SecurityService {
   private anonymizeString(str: string): string {
     if (str.includes('@')) {
       // Email anonymization
-      const [local, domain] = str.split('@');
-      return `${local.charAt(0)}***@${domain}`;
-    } else if (str.length > 4) {
+      const parts = str.split('@');
+      const local = parts[0];
+      const domain = parts[1];
+      if (local && domain) {
+        return `${local.charAt(0)}***@${domain}`;
+      }
+    }
+    
+    if (str.length > 4) {
       // General string anonymization
       return `${str.substring(0, 2)}***${str.substring(str.length - 2)}`;
     } else {
@@ -497,7 +556,7 @@ export class SecurityService {
     }
   }
 
-  generateSecurityReport(): any {
+  async generateSecurityReport(): Promise<any> {
     const now = new Date();
     const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     
@@ -518,8 +577,8 @@ export class SecurityService {
         recentBlocks: recentAudits.filter(a => a.event === 'rate_limit_exceeded').length
       },
       systemHealth: {
-        encryptionWorking: this.testEncryption(),
-        hashingWorking: this.testHashing()
+        encryptionWorking: await this.testEncryption(),
+        hashingWorking: await this.testHashing()
       }
     };
   }
@@ -537,11 +596,11 @@ export class SecurityService {
       .slice(0, 10);
   }
 
-  private testEncryption(): boolean {
+  private async testEncryption(): Promise<boolean> {
     try {
       const testData = 'test-encryption-data';
-      const encrypted = this.encrypt(testData);
-      const decrypted = this.decrypt(encrypted);
+      const encrypted = await this.encrypt(testData);
+      const decrypted = await this.decrypt(encrypted);
       return decrypted === testData;
     } catch {
       return false;
