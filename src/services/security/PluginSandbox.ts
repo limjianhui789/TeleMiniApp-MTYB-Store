@@ -1,29 +1,25 @@
-import { VM } from 'vm2';
-import { promises as fs } from 'fs';
-import crypto from 'crypto';
-import path from 'path';
-
+// Browser-compatible Plugin Sandbox using iframes and Web Workers
 export interface SandboxConfig {
   timeout: number;
   maxMemory: number;
-  allowedModules: string[];
-  blockedModules: string[];
+  allowedOrigins: string[];
+  blockedAPIs: string[];
   permissions: PluginPermission[];
   resourceLimits: ResourceLimits;
 }
 
 export interface PluginPermission {
-  type: 'network' | 'file' | 'crypto' | 'storage' | 'api';
+  type: 'network' | 'storage' | 'api' | 'dom';
   action: string;
   resource?: string;
   conditions?: Record<string, any>;
 }
 
 export interface ResourceLimits {
-  maxCpuTime: number;
+  maxExecutionTime: number;
   maxMemoryUsage: number;
   maxNetworkRequests: number;
-  maxFileOperations: number;
+  maxStorageOperations: number;
   maxApiCalls: number;
 }
 
@@ -40,41 +36,52 @@ export interface PluginExecution {
 }
 
 export interface ResourceUsage {
-  cpuTime: number;
+  executionTime: number;
   memoryUsage: number;
   networkRequests: number;
-  fileOperations: number;
+  storageOperations: number;
   apiCalls: number;
 }
 
 export class PluginSandbox {
   private executions: Map<string, PluginExecution> = new Map();
+  private sandboxFrame?: HTMLIFrameElement;
+  private workers: Map<string, Worker> = new Map();
   private defaultConfig: SandboxConfig = {
     timeout: 30000, // 30 seconds
-    maxMemory: 128 * 1024 * 1024, // 128MB
-    allowedModules: ['crypto', 'util', 'querystring', 'url'],
-    blockedModules: [
-      'fs',
-      'child_process',
-      'cluster',
-      'dgram',
-      'dns',
-      'http',
-      'https',
-      'net',
-      'os',
-      'process',
-      'vm',
+    maxMemory: 128 * 1024 * 1024, // 128MB estimate
+    allowedOrigins: ['https://api.mtyb.shop'],
+    blockedAPIs: [
+      'document.cookie',
+      'localStorage',
+      'sessionStorage',
+      'indexedDB',
+      'navigator.geolocation',
+      'navigator.camera',
+      'navigator.microphone',
     ],
     permissions: [],
     resourceLimits: {
-      maxCpuTime: 10000, // 10 seconds
-      maxMemoryUsage: 64 * 1024 * 1024, // 64MB
+      maxExecutionTime: 10000, // 10 seconds
+      maxMemoryUsage: 64 * 1024 * 1024, // 64MB estimate
       maxNetworkRequests: 100,
-      maxFileOperations: 50,
+      maxStorageOperations: 50,
       maxApiCalls: 200,
     },
   };
+
+  constructor() {
+    this.initializeSandbox();
+  }
+
+  private initializeSandbox(): void {
+    // Create a sandboxed iframe for plugin execution
+    this.sandboxFrame = document.createElement('iframe');
+    this.sandboxFrame.style.display = 'none';
+    this.sandboxFrame.setAttribute('sandbox', 'allow-scripts'); // Minimal permissions
+    this.sandboxFrame.src = 'about:blank';
+    document.body.appendChild(this.sandboxFrame);
+  }
 
   async executePlugin(
     pluginCode: string,
@@ -83,7 +90,7 @@ export class PluginSandbox {
     permissions: PluginPermission[] = [],
     config?: Partial<SandboxConfig>
   ): Promise<PluginExecution> {
-    const executionId = crypto.randomUUID();
+    const executionId = this.generateExecutionId();
     const sandboxConfig = { ...this.defaultConfig, ...config, permissions };
 
     const execution: PluginExecution = {
@@ -93,10 +100,10 @@ export class PluginSandbox {
       startTime: new Date(),
       status: 'running',
       resourceUsage: {
-        cpuTime: 0,
+        executionTime: 0,
         memoryUsage: 0,
         networkRequests: 0,
-        fileOperations: 0,
+        storageOperations: 0,
         apiCalls: 0,
       },
     };
@@ -107,11 +114,8 @@ export class PluginSandbox {
       // Validate plugin code
       await this.validatePluginCode(pluginCode);
 
-      // Create secure sandbox environment
-      const vm = this.createSecureVM(sandboxConfig, execution);
-
-      // Execute plugin with monitoring
-      const result = await this.runWithResourceMonitoring(vm, pluginCode, execution, sandboxConfig);
+      // Execute plugin in isolated environment
+      const result = await this.runInSandbox(pluginCode, execution, sandboxConfig);
 
       execution.result = result;
       execution.status = 'completed';
@@ -126,23 +130,32 @@ export class PluginSandbox {
     return execution;
   }
 
+  private generateExecutionId(): string {
+    return crypto.randomUUID();
+  }
+
   async validatePluginCode(code: string): Promise<void> {
     // Static analysis for malicious patterns
     const dangerousPatterns = [
-      /require\s*\(\s*['"`]child_process['"`]\s*\)/,
-      /require\s*\(\s*['"`]fs['"`]\s*\)/,
-      /require\s*\(\s*['"`]vm['"`]\s*\)/,
-      /process\s*\.\s*exit/,
-      /process\s*\.\s*kill/,
-      /eval\s*\(/,
-      /Function\s*\(/,
-      /setTimeout\s*\(/,
-      /setInterval\s*\(/,
-      /global\s*\./,
-      /__dirname/,
-      /__filename/,
-      /Buffer\s*\./,
-      /console\s*\.\s*log/,
+      /document\.cookie/gi,
+      /localStorage/gi,
+      /sessionStorage/gi,
+      /indexedDB/gi,
+      /eval\s*\(/gi,
+      /Function\s*\(/gi,
+      /window\.location/gi,
+      /document\.location/gi,
+      /history\.pushState/gi,
+      /history\.replaceState/gi,
+      /navigator\.geolocation/gi,
+      /XMLHttpRequest/gi,
+      /fetch\s*\(/gi,
+      /__proto__/gi,
+      /constructor\.constructor/gi,
+      /import\s*\(/gi,
+      /new\s+Worker/gi,
+      /new\s+SharedWorker/gi,
+      /new\s+ServiceWorker/gi,
     ];
 
     for (const pattern of dangerousPatterns) {
@@ -166,194 +179,205 @@ export class PluginSandbox {
     }
   }
 
-  private createSecureVM(config: SandboxConfig, execution: PluginExecution): VM {
-    const vm = new VM({
-      timeout: config.timeout,
-      sandbox: this.createSandboxContext(config, execution),
-      require: {
-        external: config.allowedModules,
-        mock: this.createModuleMocks(config, execution),
-      },
-      eval: false,
-      wasm: false,
+  private async runInSandbox(
+    code: string,
+    execution: PluginExecution,
+    config: SandboxConfig
+  ): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      
+      // Create secure execution context
+      const secureCode = this.wrapPluginCode(code, execution, config);
+      
+      // Execute with timeout
+      const timeoutId = setTimeout(() => {
+        execution.resourceUsage.executionTime = Date.now() - startTime;
+        reject(new Error('Plugin execution timeout'));
+      }, config.timeout);
+
+      try {
+        // Create isolated execution environment
+        const worker = this.createSecureWorker(secureCode, execution, config);
+        this.workers.set(execution.id, worker);
+
+        worker.onmessage = (event) => {
+          clearTimeout(timeoutId);
+          execution.resourceUsage.executionTime = Date.now() - startTime;
+          
+          if (event.data.type === 'result') {
+            resolve(event.data.result);
+          } else if (event.data.type === 'error') {
+            reject(new Error(event.data.error));
+          } else if (event.data.type === 'resourceUpdate') {
+            // Update resource usage
+            Object.assign(execution.resourceUsage, event.data.usage);
+          }
+        };
+
+        worker.onerror = (error) => {
+          clearTimeout(timeoutId);
+          execution.resourceUsage.executionTime = Date.now() - startTime;
+          reject(new Error(`Worker error: ${error.message}`));
+        };
+
+      } catch (error) {
+        clearTimeout(timeoutId);
+        execution.resourceUsage.executionTime = Date.now() - startTime;
+        reject(error);
+      }
+    });
+  }
+
+  private wrapPluginCode(
+    code: string,
+    execution: PluginExecution,
+    config: SandboxConfig
+  ): string {
+    return `
+      // Secure sandbox environment
+      const PluginAPI = ${JSON.stringify(this.createPluginAPIDefinition(config, execution))};
+      const secureConsole = {
+        log: (...args) => self.postMessage({
+          type: 'resourceUpdate',
+          usage: { apiCalls: (self.resourceUsage?.apiCalls || 0) + 1 }
+        }),
+        error: (...args) => self.postMessage({
+          type: 'resourceUpdate', 
+          usage: { apiCalls: (self.resourceUsage?.apiCalls || 0) + 1 }
+        })
+      };
+      
+      // Initialize resource tracking
+      self.resourceUsage = {
+        executionTime: 0,
+        memoryUsage: 0,
+        networkRequests: 0,
+        storageOperations: 0,
+        apiCalls: 0
+      };
+      
+      // Override global objects
+      const console = secureConsole;
+      
+      // Disable dangerous APIs
+      const eval = undefined;
+      const Function = undefined;
+      const XMLHttpRequest = undefined;
+      const fetch = undefined;
+      
+      try {
+        // User plugin code
+        const result = (function() {
+          ${code}
+        })();
+        
+        self.postMessage({ type: 'result', result });
+      } catch (error) {
+        self.postMessage({ type: 'error', error: error.message });
+      }
+    `;
+  }
+
+  private createSecureWorker(
+    code: string,
+    execution: PluginExecution,
+    config: SandboxConfig
+  ): Worker {
+    const blob = new Blob([code], { type: 'application/javascript' });
+    const worker = new Worker(URL.createObjectURL(blob));
+    
+    // Monitor worker resource usage
+    const resourceMonitor = setInterval(() => {
+      // Basic resource monitoring (limited in browsers)
+      const currentTime = Date.now() - execution.startTime.getTime();
+      execution.resourceUsage.executionTime = currentTime;
+      
+      // Check limits
+      if (currentTime > config.resourceLimits.maxExecutionTime) {
+        worker.terminate();
+        clearInterval(resourceMonitor);
+      }
+    }, 100);
+
+    // Cleanup on worker completion
+    worker.addEventListener('message', () => {
+      clearInterval(resourceMonitor);
     });
 
-    return vm;
+    worker.addEventListener('error', () => {
+      clearInterval(resourceMonitor);
+    });
+
+    return worker;
   }
 
-  private createSandboxContext(config: SandboxConfig, execution: PluginExecution): any {
+  private createPluginAPIDefinition(config: SandboxConfig, execution: PluginExecution): any {
     return {
-      // Safe globals
-      console: this.createSecureConsole(execution),
-      setTimeout: this.createSecureTimeout(execution),
-      setInterval: this.createSecureInterval(execution),
-      clearTimeout: (id: any) => clearTimeout(id),
-      clearInterval: (id: any) => clearInterval(id),
-
-      // Plugin API
-      PluginAPI: this.createPluginAPI(config, execution),
-
-      // Crypto utilities (limited)
-      crypto: {
-        randomUUID: crypto.randomUUID,
-        createHash: (algorithm: string) => {
-          if (!['sha256', 'sha512', 'md5'].includes(algorithm)) {
-            throw new Error(`Hash algorithm ${algorithm} not allowed`);
-          }
-          return crypto.createHash(algorithm);
-        },
-      },
-
-      // JSON utilities
-      JSON: {
-        parse: JSON.parse,
-        stringify: JSON.stringify,
-      },
-
-      // Date utilities
-      Date: Date,
-      Math: Math,
-
-      // Array and Object methods
-      Array: Array,
-      Object: Object,
-      String: String,
-      Number: Number,
-      Boolean: Boolean,
-      RegExp: RegExp,
-    };
-  }
-
-  private createModuleMocks(
-    config: SandboxConfig,
-    execution: PluginExecution
-  ): Record<string, any> {
-    const mocks: Record<string, any> = {};
-
-    // Mock blocked modules to prevent access
-    for (const module of config.blockedModules) {
-      mocks[module] = () => {
-        throw new Error(`Module '${module}' is not allowed in sandbox`);
-      };
-    }
-
-    // Provide limited HTTP client
-    mocks['http-client'] = {
-      request: this.createSecureHttpClient(config, execution),
-    };
-
-    return mocks;
-  }
-
-  private createSecureConsole(execution: PluginExecution): any {
-    return {
-      log: (...args: any[]) => {
-        // Log to execution context instead of global console
-        if (!execution.result) {
-          execution.result = { logs: [] };
-        }
-        if (!execution.result.logs) {
-          execution.result.logs = [];
-        }
-        execution.result.logs.push(args.join(' '));
-      },
-      error: (...args: any[]) => {
-        if (!execution.result) {
-          execution.result = { errors: [] };
-        }
-        if (!execution.result.errors) {
-          execution.result.errors = [];
-        }
-        execution.result.errors.push(args.join(' '));
-      },
-    };
-  }
-
-  private createSecureTimeout(execution: PluginExecution): any {
-    return (callback: Function, delay: number) => {
-      if (delay > 10000) {
-        throw new Error('Timeout delay cannot exceed 10 seconds');
-      }
-
-      execution.resourceUsage.cpuTime += delay;
-
-      if (execution.resourceUsage.cpuTime > this.defaultConfig.resourceLimits.maxCpuTime) {
-        throw new Error('CPU time limit exceeded');
-      }
-
-      return setTimeout(callback, delay);
-    };
-  }
-
-  private createSecureInterval(execution: PluginExecution): any {
-    return (callback: Function, delay: number) => {
-      if (delay < 1000) {
-        throw new Error('Interval delay cannot be less than 1 second');
-      }
-      if (delay > 60000) {
-        throw new Error('Interval delay cannot exceed 60 seconds');
-      }
-
-      return setInterval(callback, delay);
-    };
-  }
-
-  private createPluginAPI(config: SandboxConfig, execution: PluginExecution): any {
-    return {
-      // Storage API
+      // Storage API (simulated)
       storage: {
-        get: async (key: string) => {
-          this.checkPermission(config.permissions, 'storage', 'read', key);
-          execution.resourceUsage.apiCalls++;
-          return this.getStorageValue(execution.pluginId, key);
-        },
-        set: async (key: string, value: any) => {
-          this.checkPermission(config.permissions, 'storage', 'write', key);
-          execution.resourceUsage.apiCalls++;
-          return this.setStorageValue(execution.pluginId, key, value);
-        },
-        delete: async (key: string) => {
-          this.checkPermission(config.permissions, 'storage', 'delete', key);
-          execution.resourceUsage.apiCalls++;
-          return this.deleteStorageValue(execution.pluginId, key);
-        },
+        get: `async function(key) {
+          self.resourceUsage.storageOperations++;
+          self.resourceUsage.apiCalls++;
+          // Simulated storage access
+          return null;
+        }`,
+        set: `async function(key, value) {
+          self.resourceUsage.storageOperations++;
+          self.resourceUsage.apiCalls++;
+          // Simulated storage write
+          return true;
+        }`,
+        delete: `async function(key) {
+          self.resourceUsage.storageOperations++;
+          self.resourceUsage.apiCalls++;
+          // Simulated storage delete
+          return true;
+        }`,
       },
 
-      // Network API
+      // Limited network API
       network: {
-        fetch: async (url: string, options?: any) => {
-          this.checkPermission(config.permissions, 'network', 'request', url);
-          execution.resourceUsage.networkRequests++;
-
-          if (execution.resourceUsage.networkRequests > config.resourceLimits.maxNetworkRequests) {
+        request: `async function(url, options) {
+          self.resourceUsage.networkRequests++;
+          self.resourceUsage.apiCalls++;
+          
+          // Check resource limits
+          if (self.resourceUsage.networkRequests > ${config.resourceLimits.maxNetworkRequests}) {
             throw new Error('Network request limit exceeded');
           }
-
-          return this.secureNetworkRequest(url, options);
-        },
+          
+          // Validate allowed origins
+          const allowedOrigins = ${JSON.stringify(config.allowedOrigins)};
+          const urlObj = new URL(url);
+          if (!allowedOrigins.some(origin => urlObj.origin === origin)) {
+            throw new Error('Request to unauthorized origin: ' + urlObj.origin);
+          }
+          
+          // Return mock response for security
+          return { data: 'mock response' };
+        }`,
       },
 
       // User API
       user: {
-        getCurrentUser: async () => {
-          this.checkPermission(config.permissions, 'api', 'user.read');
-          execution.resourceUsage.apiCalls++;
-          return this.getCurrentUser(execution.userId);
-        },
+        getCurrentUser: `async function() {
+          self.resourceUsage.apiCalls++;
+          return { id: '${execution.userId}' };
+        }`,
       },
 
       // Platform API
       platform: {
-        log: (level: string, message: string) => {
-          this.checkPermission(config.permissions, 'api', 'platform.log');
-          execution.resourceUsage.apiCalls++;
-          this.logPluginMessage(execution.pluginId, level, message);
-        },
-        notify: async (message: string) => {
-          this.checkPermission(config.permissions, 'api', 'platform.notify');
-          execution.resourceUsage.apiCalls++;
-          return this.sendNotification(execution.userId, message);
-        },
+        log: `function(level, message) {
+          self.resourceUsage.apiCalls++;
+          console.log('[Plugin ${execution.pluginId}] [' + level + '] ' + message);
+        }`,
+        notify: `async function(message) {
+          self.resourceUsage.apiCalls++;
+          console.log('Notification: ' + message);
+          return true;
+        }`,
       },
     };
   }
@@ -376,88 +400,6 @@ export class PluginSandbox {
     }
   }
 
-  private async runWithResourceMonitoring(
-    vm: VM,
-    code: string,
-    execution: PluginExecution,
-    config: SandboxConfig
-  ): Promise<any> {
-    const startMemory = process.memoryUsage().heapUsed;
-    const startTime = Date.now();
-
-    // Monitor memory usage
-    const memoryMonitor = setInterval(() => {
-      const currentMemory = process.memoryUsage().heapUsed;
-      execution.resourceUsage.memoryUsage = Math.max(
-        execution.resourceUsage.memoryUsage,
-        currentMemory - startMemory
-      );
-
-      if (execution.resourceUsage.memoryUsage > config.resourceLimits.maxMemoryUsage) {
-        clearInterval(memoryMonitor);
-        throw new Error('Memory usage limit exceeded');
-      }
-    }, 100);
-
-    try {
-      const result = await Promise.race([
-        vm.run(code),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Plugin execution timeout')), config.timeout)
-        ),
-      ]);
-
-      return result;
-    } finally {
-      clearInterval(memoryMonitor);
-      execution.resourceUsage.cpuTime = Date.now() - startTime;
-    }
-  }
-
-  // Mock implementations for sandbox APIs
-  private async getStorageValue(pluginId: string, key: string): Promise<any> {
-    // In a real implementation, this would interact with a secure storage system
-    return null;
-  }
-
-  private async setStorageValue(pluginId: string, key: string, value: any): Promise<void> {
-    // In a real implementation, this would store data securely
-  }
-
-  private async deleteStorageValue(pluginId: string, key: string): Promise<void> {
-    // In a real implementation, this would delete data securely
-  }
-
-  private async secureNetworkRequest(url: string, options?: any): Promise<any> {
-    // Validate URL
-    const allowedDomains = ['api.example.com', 'safe-api.com'];
-    const urlObj = new URL(url);
-
-    if (!allowedDomains.some(domain => urlObj.hostname.endsWith(domain))) {
-      throw new Error(`Network requests to ${urlObj.hostname} are not allowed`);
-    }
-
-    // In a real implementation, make the actual request with proper security
-    return { data: 'mock response' };
-  }
-
-  private async getCurrentUser(userId: string): Promise<any> {
-    // Return limited user information
-    return {
-      id: userId,
-      // Only expose necessary user data
-    };
-  }
-
-  private logPluginMessage(pluginId: string, level: string, message: string): void {
-    console.log(`[Plugin ${pluginId}] [${level}] ${message}`);
-  }
-
-  private async sendNotification(userId: string, message: string): Promise<void> {
-    // In a real implementation, send notification to user
-    console.log(`Notification to ${userId}: ${message}`);
-  }
-
   // Public methods for execution management
   getExecution(executionId: string): PluginExecution | undefined {
     return this.executions.get(executionId);
@@ -467,6 +409,12 @@ export class PluginSandbox {
     const execution = this.executions.get(executionId);
     if (!execution || execution.status !== 'running') {
       return false;
+    }
+
+    const worker = this.workers.get(executionId);
+    if (worker) {
+      worker.terminate();
+      this.workers.delete(executionId);
     }
 
     execution.status = 'terminated';
@@ -497,42 +445,65 @@ export class PluginSandbox {
     const completed = executions.filter(e => e.endTime);
     if (completed.length === 0) return 0;
 
-    const total = completed.reduce(
-      (sum, e) => sum + (e.endTime!.getTime() - e.startTime.getTime()),
-      0
-    );
+    const total = completed.reduce((sum, e) => {
+      return sum + (e.endTime!.getTime() - e.startTime.getTime());
+    }, 0);
+
     return total / completed.length;
   }
 
   private calculateTotalResourceUsage(executions: PluginExecution[]): ResourceUsage {
     return executions.reduce(
       (total, e) => ({
-        cpuTime: total.cpuTime + e.resourceUsage.cpuTime,
+        executionTime: total.executionTime + e.resourceUsage.executionTime,
         memoryUsage: total.memoryUsage + e.resourceUsage.memoryUsage,
         networkRequests: total.networkRequests + e.resourceUsage.networkRequests,
-        fileOperations: total.fileOperations + e.resourceUsage.fileOperations,
+        storageOperations: total.storageOperations + e.resourceUsage.storageOperations,
         apiCalls: total.apiCalls + e.resourceUsage.apiCalls,
       }),
       {
-        cpuTime: 0,
+        executionTime: 0,
         memoryUsage: 0,
         networkRequests: 0,
-        fileOperations: 0,
+        storageOperations: 0,
         apiCalls: 0,
       }
     );
   }
 
-  // Cleanup old executions
   cleanup(maxAge: number = 24 * 60 * 60 * 1000): void {
-    const cutoff = new Date(Date.now() - maxAge);
+    const now = Date.now();
+    const toDelete: string[] = [];
 
-    for (const [id, execution] of this.executions.entries()) {
-      if (execution.startTime < cutoff && execution.status !== 'running') {
-        this.executions.delete(id);
+    for (const [id, execution] of this.executions) {
+      if (execution.endTime && now - execution.endTime.getTime() > maxAge) {
+        toDelete.push(id);
+        
+        // Clean up any remaining workers
+        const worker = this.workers.get(id);
+        if (worker) {
+          worker.terminate();
+          this.workers.delete(id);
+        }
       }
     }
+
+    toDelete.forEach(id => this.executions.delete(id));
+  }
+
+  destroy(): void {
+    // Terminate all active workers
+    for (const [id, worker] of this.workers) {
+      worker.terminate();
+    }
+    this.workers.clear();
+    
+    // Remove sandbox frame
+    if (this.sandboxFrame && this.sandboxFrame.parentNode) {
+      this.sandboxFrame.parentNode.removeChild(this.sandboxFrame);
+    }
+    
+    // Clear executions
+    this.executions.clear();
   }
 }
-
-export const pluginSandbox = new PluginSandbox();

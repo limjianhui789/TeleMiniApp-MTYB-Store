@@ -1,5 +1,4 @@
-// Browser-compatible crypto implementation
-import bcrypt from 'bcryptjs';
+// Browser-compatible crypto implementation using Web Crypto API
 
 export interface SecurityConfig {
   encryption: {
@@ -178,11 +177,37 @@ export class SecurityService {
     return bytes.buffer;
   }
 
-  // Password Hashing
+  // Password Hashing using Web Crypto API (PBKDF2)
   async hashPassword(password: string): Promise<string> {
     try {
-      const salt = await bcrypt.genSalt(this.config.hashing.saltRounds);
-      return await bcrypt.hash(password, salt);
+      const encoder = new TextEncoder();
+      const salt = this.generateRandomBytes(16);
+      const iterations = Math.pow(2, this.config.hashing.saltRounds); // Convert rounds to iterations
+      
+      const keyMaterial = await window.crypto.subtle.importKey(
+        'raw',
+        encoder.encode(password),
+        'PBKDF2',
+        false,
+        ['deriveBits']
+      );
+
+      const hashBuffer = await window.crypto.subtle.deriveBits(
+        {
+          name: 'PBKDF2',
+          salt: salt,
+          iterations: iterations,
+          hash: 'SHA-256',
+        },
+        keyMaterial,
+        256
+      );
+
+      const saltHex = this.bufferToHex(salt.buffer);
+      const hashHex = this.bufferToHex(hashBuffer);
+      
+      // Format: iterations$salt$hash
+      return `${iterations}$${saltHex}$${hashHex}`;
     } catch (error) {
       this.auditSecurityEvent('password_hashing_failed', 'high', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -193,7 +218,37 @@ export class SecurityService {
 
   async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
     try {
-      return await bcrypt.compare(password, hashedPassword);
+      const [iterationsStr, saltHex, hashHex] = hashedPassword.split('$');
+      if (!iterationsStr || !saltHex || !hashHex) {
+        return false;
+      }
+
+      const iterations = parseInt(iterationsStr);
+      const salt = this.hexToBuffer(saltHex);
+      const expectedHash = hashHex;
+
+      const encoder = new TextEncoder();
+      const keyMaterial = await window.crypto.subtle.importKey(
+        'raw',
+        encoder.encode(password),
+        'PBKDF2',
+        false,
+        ['deriveBits']
+      );
+
+      const hashBuffer = await window.crypto.subtle.deriveBits(
+        {
+          name: 'PBKDF2',
+          salt: salt,
+          iterations: iterations,
+          hash: 'SHA-256',
+        },
+        keyMaterial,
+        256
+      );
+
+      const actualHash = this.bufferToHex(hashBuffer);
+      return actualHash === expectedHash;
     } catch (error) {
       this.auditSecurityEvent('password_verification_failed', 'medium', {
         error: error instanceof Error ? error.message : 'Unknown error',

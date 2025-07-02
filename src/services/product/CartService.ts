@@ -772,7 +772,7 @@ export class CartService extends EventEmitter {
       }
 
       // Check if price has changed
-      if (product.price !== item.product.price) {
+      if (item && product.price !== item.product.price) {
         warnings.push(
           `Price for ${item.product.name} has changed from ${item.product.currency} ${item.product.price} to ${product.currency} ${product.price}`
         );
@@ -781,7 +781,7 @@ export class CartService extends EventEmitter {
       }
 
       // Check quantity against available stock
-      if (product.stock && item.quantity > product.stock.available) {
+      if (item && product.stock && item.quantity > product.stock.available) {
         warnings.push(
           `Reduced quantity for ${item.product.name} from ${item.quantity} to ${product.stock.available} (limited stock)`
         );
@@ -820,6 +820,16 @@ export class CartService extends EventEmitter {
       }
 
       const item = this.cartItems.splice(itemIndex, 1)[0];
+      if (!item) {
+        return {
+          success: false,
+          error: {
+            code: 'ITEM_NOT_FOUND',
+            message: 'Failed to remove item from cart',
+          },
+        };
+      }
+
       this.savedForLater.push(item);
 
       this.notifyListeners();
@@ -857,6 +867,15 @@ export class CartService extends EventEmitter {
       }
 
       const item = this.savedForLater.splice(itemIndex, 1)[0];
+      if (!item) {
+        return {
+          success: false,
+          error: {
+            code: 'ITEM_NOT_FOUND',
+            message: 'Failed to remove item from saved list',
+          },
+        };
+      }
 
       // Validate item is still available
       const stockAvailable = await productService.checkStock(item.productId);
