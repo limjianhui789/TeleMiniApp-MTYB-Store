@@ -35,165 +35,161 @@ interface CartItemComponentProps {
 // Cart Item Component
 // ============================================================================
 
-const CartItemComponent: React.FC<CartItemComponentProps> = React.memo(({
-  item,
-  onQuantityChange,
-  onRemove,
-  onSaveForLater,
-  onProductClick,
-}) => {
-  const [isUpdating, setIsUpdating] = useState(false);
+const CartItemComponent: React.FC<CartItemComponentProps> = React.memo(
+  ({ item, onQuantityChange, onRemove, onSaveForLater, onProductClick }) => {
+    const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleQuantityChange = async (newQuantity: number) => {
-    if (newQuantity === item.quantity) return;
+    const handleQuantityChange = async (newQuantity: number) => {
+      if (newQuantity === item.quantity) return;
 
-    setIsUpdating(true);
-    try {
-      await onQuantityChange(item.productId, newQuantity);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+      setIsUpdating(true);
+      try {
+        await onQuantityChange(item.productId, newQuantity);
+      } finally {
+        setIsUpdating(false);
+      }
+    };
 
-  const hasDiscount = item.priceCalculation && item.priceCalculation.totalDiscount > 0;
-  const discountPercentage = hasDiscount
-    ? Math.round((item.priceCalculation!.totalDiscount / item.priceCalculation!.basePrice) * 100)
-    : 0;
+    const hasDiscount = item.priceCalculation && item.priceCalculation.totalDiscount > 0;
+    const discountPercentage = hasDiscount
+      ? Math.round((item.priceCalculation!.totalDiscount / item.priceCalculation!.basePrice) * 100)
+      : 0;
 
-  return (
-    <div className="cart-item">
-      <div className="cart-item-content">
-        {/* Product Image */}
-        <div className="cart-item-image">
-          {item.product.images[0] ? (
-            <img
-              src={item.product.images[0].url}
-              alt={item.product.name}
-              onClick={() => onProductClick?.(item.productId)}
-            />
-          ) : (
-            <div className="image-placeholder">📦</div>
-          )}
+    return (
+      <div className="cart-item">
+        <div className="cart-item-content">
+          {/* Product Image */}
+          <div className="cart-item-image">
+            {item.product.images[0] ? (
+              <img
+                src={item.product.images[0].url}
+                alt={item.product.name}
+                onClick={() => onProductClick?.(item.productId)}
+              />
+            ) : (
+              <div className="image-placeholder">📦</div>
+            )}
 
-          {!item.isAvailable && <div className="unavailable-overlay">Unavailable</div>}
-        </div>
-
-        {/* Product Info */}
-        <div className="cart-item-info">
-          <div className="product-header">
-            <h3 className="product-name" onClick={() => onProductClick?.(item.productId)}>
-              {item.product.name}
-            </h3>
-
-            {hasDiscount && <span className="discount-badge">-{discountPercentage}% OFF</span>}
+            {!item.isAvailable && <div className="unavailable-overlay">Unavailable</div>}
           </div>
 
-          <div className="product-details">
-            <div className="category-badge" style={{ backgroundColor: '#007AFF' }}>
-              {item.product.category}
+          {/* Product Info */}
+          <div className="cart-item-info">
+            <div className="product-header">
+              <h3 className="product-name" onClick={() => onProductClick?.(item.productId)}>
+                {item.product.name}
+              </h3>
+
+              {hasDiscount && <span className="discount-badge">-{discountPercentage}% OFF</span>}
             </div>
 
-            {item.stockAlert && <div className="stock-alert">⚠️ {item.stockAlert}</div>}
-          </div>
+            <div className="product-details">
+              <div className="category-badge" style={{ backgroundColor: '#007AFF' }}>
+                {item.product.category}
+              </div>
 
-          {/* Price Information */}
-          <div className="price-info">
-            <div className="price-display">
-              <span className="currency">{item.product.currency}</span>
-              <span className="amount">{item.calculatedSubtotal.toFixed(2)}</span>
-              {item.quantity > 1 && (
-                <span className="unit-price">
-                  (${(item.calculatedSubtotal / item.quantity).toFixed(2)} each)
-                </span>
+              {item.stockAlert && <div className="stock-alert">⚠️ {item.stockAlert}</div>}
+            </div>
+
+            {/* Price Information */}
+            <div className="price-info">
+              <div className="price-display">
+                <span className="currency">{item.product.currency}</span>
+                <span className="amount">{item.calculatedSubtotal.toFixed(2)}</span>
+                {item.quantity > 1 && (
+                  <span className="unit-price">
+                    (${(item.calculatedSubtotal / item.quantity).toFixed(2)} each)
+                  </span>
+                )}
+              </div>
+
+              {item.originalSubtotal !== item.calculatedSubtotal && (
+                <div className="original-price">
+                  <span className="currency">{item.product.currency}</span>
+                  <span className="amount">{item.originalSubtotal.toFixed(2)}</span>
+                </div>
+              )}
+
+              {item.savings > 0 && (
+                <div className="savings">
+                  You save: {item.product.currency} {item.savings.toFixed(2)}
+                </div>
               )}
             </div>
 
-            {item.originalSubtotal !== item.calculatedSubtotal && (
-              <div className="original-price">
-                <span className="currency">{item.product.currency}</span>
-                <span className="amount">{item.originalSubtotal.toFixed(2)}</span>
+            {/* Applied Discounts */}
+            {item.priceCalculation?.discounts && item.priceCalculation.discounts.length > 0 && (
+              <div className="applied-discounts">
+                <h4>Applied Discounts:</h4>
+                {item.priceCalculation.discounts.map((discount, index) => (
+                  <div key={index} className="discount-item">
+                    <span className="discount-name">{discount.ruleName}</span>
+                    <span className="discount-amount">
+                      -{item.product.currency} {discount.amount.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
+          </div>
 
-            {item.savings > 0 && (
-              <div className="savings">
-                You save: {item.product.currency} {item.savings.toFixed(2)}
+          {/* Quantity and Actions */}
+          <div className="cart-item-actions">
+            <div className="quantity-controls">
+              <label>Quantity:</label>
+              <div className="quantity-selector">
+                <button
+                  onClick={() => handleQuantityChange(item.quantity - 1)}
+                  disabled={isUpdating || item.quantity <= 1}
+                  className="quantity-btn"
+                >
+                  -
+                </button>
+                <span className="quantity-display">{item.quantity}</span>
+                <button
+                  onClick={() => handleQuantityChange(item.quantity + 1)}
+                  disabled={
+                    isUpdating ||
+                    (item.product.stock && item.quantity >= item.product.stock.available)
+                  }
+                  className="quantity-btn"
+                >
+                  +
+                </button>
               </div>
-            )}
-          </div>
-
-          {/* Applied Discounts */}
-          {item.priceCalculation?.discounts && item.priceCalculation.discounts.length > 0 && (
-            <div className="applied-discounts">
-              <h4>Applied Discounts:</h4>
-              {item.priceCalculation.discounts.map((discount, index) => (
-                <div key={index} className="discount-item">
-                  <span className="discount-name">{discount.ruleName}</span>
-                  <span className="discount-amount">
-                    -{item.product.currency} {discount.amount.toFixed(2)}
-                  </span>
-                </div>
-              ))}
             </div>
-          )}
-        </div>
 
-        {/* Quantity and Actions */}
-        <div className="cart-item-actions">
-          <div className="quantity-controls">
-            <label>Quantity:</label>
-            <div className="quantity-selector">
-              <button
-                onClick={() => handleQuantityChange(item.quantity - 1)}
-                disabled={isUpdating || item.quantity <= 1}
-                className="quantity-btn"
+            <div className="item-actions">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onSaveForLater(item.productId)}
+                disabled={isUpdating}
               >
-                -
-              </button>
-              <span className="quantity-display">{item.quantity}</span>
-              <button
-                onClick={() => handleQuantityChange(item.quantity + 1)}
-                disabled={
-                  isUpdating ||
-                  (item.product.stock && item.quantity >= item.product.stock.available)
-                }
-                className="quantity-btn"
+                💾 Save for Later
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onRemove(item.productId)}
+                disabled={isUpdating}
+                className="remove-btn"
               >
-                +
-              </button>
+                🗑️ Remove
+              </Button>
             </div>
           </div>
-
-          <div className="item-actions">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onSaveForLater(item.productId)}
-              disabled={isUpdating}
-            >
-              💾 Save for Later
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onRemove(item.productId)}
-              disabled={isUpdating}
-              className="remove-btn"
-            >
-              🗑️ Remove
-            </Button>
-          </div>
         </div>
+
+        {isUpdating && (
+          <div className="updating-overlay">
+            <LoadingSpinner size="small" />
+          </div>
+        )}
       </div>
-
-      {isUpdating && (
-        <div className="updating-overlay">
-          <LoadingSpinner size="small" />
-        </div>
-      )}
-    </div>
-  );
-});
+    );
+  }
+);
 
 // ============================================================================
 // Enhanced Cart Page Component

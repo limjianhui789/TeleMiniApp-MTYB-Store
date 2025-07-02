@@ -1,6 +1,36 @@
 // ============================================================================
-// Jest Test Setup Configuration
+// MTYB Platform - Test Setup Configuration
 // ============================================================================
+
+// Mock import.meta for Jest environment
+Object.defineProperty(globalThis, 'import', {
+  value: {
+    meta: {
+      env: {
+        MODE: 'test',
+        DEV: false,
+        PROD: false,
+        VITE_API_BASE_URL: 'http://localhost:3000/api',
+        VITE_APP_NAME: 'MTYB Test Platform',
+        VITE_APP_VERSION: '1.0.0',
+        VITE_API_TIMEOUT: '30000',
+        VITE_CURLEC_BASE_URL: 'https://api.curlec.com',
+        VITE_CURLEC_PUBLIC_KEY: 'test_key',
+        VITE_CURLEC_WEBHOOK_SECRET: 'test_secret',
+        VITE_TELEGRAM_BOT_TOKEN: 'test_token',
+        VITE_TELEGRAM_WEBHOOK_URL: 'https://test.webhook.url',
+        VITE_ENABLE_PLUGIN_SANDBOX: 'true',
+        VITE_ENABLE_ORDER_NOTIFICATIONS: 'true',
+        VITE_ENABLE_ANALYTICS: 'false',
+        VITE_ENABLE_MOCK_PAYMENTS: 'true',
+        VITE_STORAGE_PREFIX: 'mtyb_test_',
+        VITE_ENCRYPTION_KEY: 'test_encryption_key',
+        VITE_JWT_SECRET: 'test_jwt_secret',
+        VITE_LOG_LEVEL: 'info',
+      },
+    },
+  },
+});
 
 import '@testing-library/jest-dom';
 

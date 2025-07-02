@@ -21,14 +21,14 @@ export enum UserRole {
   USER = 'user',
   DEVELOPER = 'developer',
   MODERATOR = 'moderator',
-  ADMIN = 'admin'
+  ADMIN = 'admin',
 }
 
 export enum UserStatus {
   ACTIVE = 'active',
   SUSPENDED = 'suspended',
   BANNED = 'banned',
-  PENDING_VERIFICATION = 'pending_verification'
+  PENDING_VERIFICATION = 'pending_verification',
 }
 
 export interface AuthTokens {
@@ -74,13 +74,15 @@ export class AuthService {
     this.initializeDefaultUsers();
   }
 
-  async authenticateWithTelegram(authData: TelegramAuthData): Promise<{ user: User; tokens: AuthTokens }> {
+  async authenticateWithTelegram(
+    authData: TelegramAuthData
+  ): Promise<{ user: User; tokens: AuthTokens }> {
     if (!this.verifyTelegramAuth(authData)) {
       throw new Error('Invalid Telegram authentication data');
     }
 
     let user = this.findUserByTelegramId(authData.id);
-    
+
     if (!user) {
       user = await this.createUserFromTelegram(authData);
     } else {
@@ -95,8 +97,8 @@ export class AuthService {
 
   async authenticate(email: string, password: string): Promise<{ user: User; tokens: AuthTokens }> {
     const user = this.findUserByEmail(email);
-    
-    if (!user || !await this.verifyPassword(password, user.id)) {
+
+    if (!user || !(await this.verifyPassword(password, user.id))) {
       throw new Error('Invalid credentials');
     }
 
@@ -114,7 +116,7 @@ export class AuthService {
     try {
       const decoded = jwt.verify(refreshToken, this.JWT_REFRESH_SECRET) as any;
       const session = this.sessions.get(decoded.sessionId);
-      
+
       if (!session || session.refreshToken !== refreshToken) {
         throw new Error('Invalid refresh token');
       }
@@ -130,7 +132,7 @@ export class AuthService {
       }
 
       const newTokens = await this.generateTokens(user);
-      
+
       session.sessionToken = newTokens.accessToken;
       session.refreshToken = newTokens.refreshToken;
       session.lastUsedAt = new Date();
@@ -146,7 +148,7 @@ export class AuthService {
     try {
       const decoded = jwt.verify(token, this.JWT_SECRET) as any;
       const user = this.users.get(decoded.userId);
-      
+
       if (!user || user.status !== UserStatus.ACTIVE) {
         throw new Error('User not found or inactive');
       }
@@ -161,7 +163,7 @@ export class AuthService {
     try {
       const decoded = jwt.verify(token, this.JWT_SECRET) as any;
       const session = this.sessions.get(decoded.sessionId);
-      
+
       if (session) {
         this.sessions.delete(session.id);
       }
@@ -181,13 +183,17 @@ export class AuthService {
     return Array.from(this.sessions.values()).filter(s => s.userId === userId);
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> {
     const user = this.users.get(userId);
     if (!user) {
       throw new Error('User not found');
     }
 
-    if (!await this.verifyPassword(currentPassword, userId)) {
+    if (!(await this.verifyPassword(currentPassword, userId))) {
       throw new Error('Current password is incorrect');
     }
 
@@ -225,27 +231,31 @@ export class AuthService {
 
   private async generateTokens(user: User): Promise<AuthTokens> {
     const sessionId = uuidv4();
-    
+
     const payload = {
       userId: user.id,
       role: user.role,
       sessionId,
-      permissions: this.getUserPermissions(user.role)
+      permissions: this.getUserPermissions(user.role),
     };
 
     const accessToken = jwt.sign(payload, this.JWT_SECRET, { expiresIn: this.JWT_EXPIRES_IN });
-    const refreshToken = jwt.sign({ userId: user.id, sessionId }, this.JWT_REFRESH_SECRET, { 
-      expiresIn: this.JWT_REFRESH_EXPIRES_IN 
+    const refreshToken = jwt.sign({ userId: user.id, sessionId }, this.JWT_REFRESH_SECRET, {
+      expiresIn: this.JWT_REFRESH_EXPIRES_IN,
     });
 
     return {
       accessToken,
       refreshToken,
-      expiresIn: this.parseExpiration(this.JWT_EXPIRES_IN)
+      expiresIn: this.parseExpiration(this.JWT_EXPIRES_IN),
     };
   }
 
-  private async createSession(user: User, tokens: AuthTokens, deviceInfo: any): Promise<UserSession> {
+  private async createSession(
+    user: User,
+    tokens: AuthTokens,
+    deviceInfo: any
+  ): Promise<UserSession> {
     const session: UserSession = {
       id: uuidv4(),
       userId: user.id,
@@ -254,7 +264,7 @@ export class AuthService {
       deviceInfo,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       createdAt: new Date(),
-      lastUsedAt: new Date()
+      lastUsedAt: new Date(),
     };
 
     this.sessions.set(session.id, session);
@@ -268,8 +278,14 @@ export class AuthService {
       .map(key => `${key}=${(authData as any)[key]}`)
       .join('\n');
 
-    const secretKey = require('crypto').createHash('sha256').update(this.TELEGRAM_BOT_TOKEN).digest();
-    const hmac = require('crypto').createHmac('sha256', secretKey).update(checkString).digest('hex');
+    const secretKey = require('crypto')
+      .createHash('sha256')
+      .update(this.TELEGRAM_BOT_TOKEN)
+      .digest();
+    const hmac = require('crypto')
+      .createHmac('sha256', secretKey)
+      .update(checkString)
+      .digest('hex');
 
     return hmac === authData.hash;
   }
@@ -294,7 +310,7 @@ export class AuthService {
       emailVerified: false,
       twoFactorEnabled: false,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.users.set(user.id, user);
@@ -323,7 +339,7 @@ export class AuthService {
         'plugin:review',
         'order:create',
         'profile:read',
-        'profile:update'
+        'profile:update',
       ],
       [UserRole.DEVELOPER]: [
         'plugin:install',
@@ -335,7 +351,7 @@ export class AuthService {
         'earnings:read',
         'order:create',
         'profile:read',
-        'profile:update'
+        'profile:update',
       ],
       [UserRole.MODERATOR]: [
         'plugin:install',
@@ -346,15 +362,9 @@ export class AuthService {
         'review:moderate',
         'order:create',
         'profile:read',
-        'profile:update'
+        'profile:update',
       ],
-      [UserRole.ADMIN]: [
-        'plugin:*',
-        'user:*',
-        'order:*',
-        'analytics:*',
-        'system:*'
-      ]
+      [UserRole.ADMIN]: ['plugin:*', 'user:*', 'order:*', 'analytics:*', 'system:*'],
     };
 
     return permissions[role] || permissions[UserRole.USER];
@@ -384,7 +394,7 @@ export class AuthService {
       emailVerified: true,
       twoFactorEnabled: false,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.users.set(adminUser.id, adminUser);

@@ -89,7 +89,7 @@ class PaymentAPI {
     const token = localStorage.getItem('auth_token');
     return {
       'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
+      Authorization: token ? `Bearer ${token}` : '',
     };
   }
 
@@ -196,11 +196,13 @@ class PaymentAPI {
   /**
    * Get payment history
    */
-  async getPaymentHistory(options: {
-    page?: number;
-    limit?: number;
-    status?: string;
-  } = {}): Promise<PaymentHistoryResponse> {
+  async getPaymentHistory(
+    options: {
+      page?: number;
+      limit?: number;
+      status?: string;
+    } = {}
+  ): Promise<PaymentHistoryResponse> {
     try {
       const params = new URLSearchParams();
       if (options.page) params.append('page', options.page.toString());
@@ -274,10 +276,12 @@ class PaymentAPI {
   /**
    * Get payment analytics
    */
-  async getAnalytics(options: {
-    startDate?: string;
-    endDate?: string;
-  } = {}): Promise<PaymentAnalyticsResponse> {
+  async getAnalytics(
+    options: {
+      startDate?: string;
+      endDate?: string;
+    } = {}
+  ): Promise<PaymentAnalyticsResponse> {
     try {
       const params = new URLSearchParams();
       if (options.startDate) params.append('startDate', options.startDate);
@@ -343,17 +347,23 @@ class PaymentAPI {
         if (!paymentDetails.cardNumber) errors.push('Card number is required');
         if (!paymentDetails.expiryDate) errors.push('Expiry date is required');
         if (!paymentDetails.cvv) errors.push('CVV is required');
-        
+
         // Basic card number validation (Luhn algorithm could be added)
-        if (paymentDetails.cardNumber && !/^\d{13,19}$/.test(paymentDetails.cardNumber.replace(/\s/g, ''))) {
+        if (
+          paymentDetails.cardNumber &&
+          !/^\d{13,19}$/.test(paymentDetails.cardNumber.replace(/\s/g, ''))
+        ) {
           errors.push('Invalid card number format');
         }
-        
+
         // Basic expiry date validation
-        if (paymentDetails.expiryDate && !/^(0[1-9]|1[0-2])\/\d{2}$/.test(paymentDetails.expiryDate)) {
+        if (
+          paymentDetails.expiryDate &&
+          !/^(0[1-9]|1[0-2])\/\d{2}$/.test(paymentDetails.expiryDate)
+        ) {
           errors.push('Invalid expiry date format (MM/YY)');
         }
-        
+
         break;
 
       case 'PAYPAL':
@@ -373,7 +383,7 @@ class PaymentAPI {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -392,12 +402,12 @@ class PaymentAPI {
    */
   getStatusColor(status: string): string {
     const statusColors: Record<string, string> = {
-      'pending': '#FFA500',
-      'processing': '#007BFF',
-      'completed': '#28A745',
-      'failed': '#DC3545',
-      'cancelled': '#6C757D',
-      'refunded': '#17A2B8',
+      pending: '#FFA500',
+      processing: '#007BFF',
+      completed: '#28A745',
+      failed: '#DC3545',
+      cancelled: '#6C757D',
+      refunded: '#17A2B8',
     };
 
     return statusColors[status.toLowerCase()] || '#6C757D';
@@ -408,12 +418,12 @@ class PaymentAPI {
    */
   getStatusIcon(status: string): string {
     const statusIcons: Record<string, string> = {
-      'pending': '⏳',
-      'processing': '🔄',
-      'completed': '✅',
-      'failed': '❌',
-      'cancelled': '⚫',
-      'refunded': '↩️',
+      pending: '⏳',
+      processing: '🔄',
+      completed: '✅',
+      failed: '❌',
+      cancelled: '⚫',
+      refunded: '↩️',
     };
 
     return statusIcons[status.toLowerCase()] || '❓';

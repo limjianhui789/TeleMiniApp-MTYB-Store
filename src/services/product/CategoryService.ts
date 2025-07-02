@@ -1,4 +1,5 @@
-import { ProductCategory, ApiResponse } from '../../types';
+import type { ApiResponse } from '../../types';
+import { ProductCategory } from '../../types';
 import { pluginManager } from '../../core/plugin/PluginManager';
 import { Logger } from '../../core/utils/Logger';
 

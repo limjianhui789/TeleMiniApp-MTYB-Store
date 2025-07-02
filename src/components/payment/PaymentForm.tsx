@@ -23,111 +23,104 @@ interface PaymentFormState {
   customerPhone: string;
 }
 
-export const PaymentForm: React.FC<PaymentFormProps> = React.memo(({
-  orderId,
-  amount,
-  currency = 'MYR',
-  onSuccess,
-  onError,
-  onCancel,
-}) => {
-  const [state, setState] = useState<PaymentFormState>({
-    isLoading: false,
-    paymentResponse: null,
-    customerEmail: '',
-    customerPhone: '',
-  });
+export const PaymentForm: React.FC<PaymentFormProps> = React.memo(
+  ({ orderId, amount, currency = 'MYR', onSuccess, onError, onCancel }) => {
+    const [state, setState] = useState<PaymentFormState>({
+      isLoading: false,
+      paymentResponse: null,
+      customerEmail: '',
+      customerPhone: '',
+    });
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    setState(prev => ({ ...prev, isLoading: true }));
+    const handleSubmit = useCallback(
+      async (e: React.FormEvent) => {
+        e.preventDefault();
 
-    try {
-      const paymentRequest: PaymentRequest = {
-        orderId,
-        amount,
-        currency,
-        method: PaymentMethod.CURLEC,
-        returnUrl: `${window.location.origin}/payment/success`,
-        cancelUrl: `${window.location.origin}/payment/cancel`,
-        metadata: {
-          customerEmail: state.customerEmail,
-          customerPhone: state.customerPhone,
-        },
-      };
+        setState(prev => ({ ...prev, isLoading: true }));
 
-      const response = await paymentService.createPayment(paymentRequest);
-      
-      if (response.success) {
-        setState(prev => ({ ...prev, paymentResponse: response, isLoading: false }));
-        
-        // Redirect to payment gateway if redirect URL is provided
-        if (response.redirectUrl) {
-          window.location.href = response.redirectUrl;
-        } else if (onSuccess && response.paymentId) {
-          onSuccess(response.paymentId);
+        try {
+          const paymentRequest: PaymentRequest = {
+            orderId,
+            amount,
+            currency,
+            method: PaymentMethod.CURLEC,
+            returnUrl: `${window.location.origin}/payment/success`,
+            cancelUrl: `${window.location.origin}/payment/cancel`,
+            metadata: {
+              customerEmail: state.customerEmail,
+              customerPhone: state.customerPhone,
+            },
+          };
+
+          const response = await paymentService.createPayment(paymentRequest);
+
+          if (response.success) {
+            setState(prev => ({ ...prev, paymentResponse: response, isLoading: false }));
+
+            // Redirect to payment gateway if redirect URL is provided
+            if (response.redirectUrl) {
+              window.location.href = response.redirectUrl;
+            } else if (onSuccess && response.paymentId) {
+              onSuccess(response.paymentId);
+            }
+          } else {
+            // Throw error to be caught by PaymentErrorBoundary
+            const errorMessage = response.error || 'Payment creation failed';
+            if (onError) {
+              onError(errorMessage);
+            }
+            throw new Error(errorMessage);
+          }
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'An unexpected error occurred';
+          if (onError) {
+            onError(errorMessage);
+          }
+          // Re-throw to be caught by PaymentErrorBoundary
+          throw error instanceof Error ? error : new Error(errorMessage);
         }
-      } else {
-        // Throw error to be caught by PaymentErrorBoundary
-        const errorMessage = response.error || 'Payment creation failed';
-        if (onError) {
-          onError(errorMessage);
-        }
-        throw new Error(errorMessage);
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      if (onError) {
-        onError(errorMessage);
-      }
-      // Re-throw to be caught by PaymentErrorBoundary
-      throw error instanceof Error ? error : new Error(errorMessage);
-    }
-  }, [orderId, amount, currency, state.customerEmail, state.customerPhone, onSuccess, onError]);
+      },
+      [orderId, amount, currency, state.customerEmail, state.customerPhone, onSuccess, onError]
+    );
 
-  const handleInputChange = useCallback((field: keyof PaymentFormState, value: string) => {
-    setState(prev => ({ ...prev, [field]: value }));
-  }, []);
+    const handleInputChange = useCallback((field: keyof PaymentFormState, value: string) => {
+      setState(prev => ({ ...prev, [field]: value }));
+    }, []);
 
-
-  // Wrap the entire component with PaymentErrorBoundary
-  return (
-    <PaymentErrorBoundary
-      onRetry={() => setState(prev => ({ ...prev, isLoading: false }))}
-      onCancel={onCancel}
-    >
-      {/* Payment Processing Overlay */}
-      {state.isLoading && (
-        <div className="payment-overlay">
-          <div className="payment-overlay__content">
-            <LoadingSpinner size="lg" />
-            <h3>Processing Your Payment</h3>
-            <p>Please wait while we securely process your payment...</p>
-            <div className="payment-overlay__steps">
-              <div className="payment-step payment-step--active">
-                ✓ Validating payment details
-              </div>
-              <div className="payment-step payment-step--active">
-                ⏳ Connecting to payment gateway
-              </div>
-              <div className="payment-step">
-                ⏳ Finalizing transaction
+    // Wrap the entire component with PaymentErrorBoundary
+    return (
+      <PaymentErrorBoundary
+        onRetry={() => setState(prev => ({ ...prev, isLoading: false }))}
+        onCancel={onCancel}
+      >
+        {/* Payment Processing Overlay */}
+        {state.isLoading && (
+          <div className="payment-overlay">
+            <div className="payment-overlay__content">
+              <LoadingSpinner size="lg" />
+              <h3>Processing Your Payment</h3>
+              <p>Please wait while we securely process your payment...</p>
+              <div className="payment-overlay__steps">
+                <div className="payment-step payment-step--active">
+                  ✓ Validating payment details
+                </div>
+                <div className="payment-step payment-step--active">
+                  ⏳ Connecting to payment gateway
+                </div>
+                <div className="payment-step">⏳ Finalizing transaction</div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-      
-      <Card className="payment-form">
+        )}
+
+        <Card className="payment-form">
           <div className="payment-form__header">
             <h2>Complete Payment</h2>
             <p className="payment-form__amount">
               {currency} {amount.toFixed(2)}
             </p>
-            <p className="payment-form__order">
-              Order: {orderId}
-            </p>
+            <p className="payment-form__order">Order: {orderId}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="payment-form__form">
@@ -137,7 +130,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = React.memo(({
                 type="email"
                 id="email"
                 value={state.customerEmail}
-                onChange={(e) => handleInputChange('customerEmail', e.target.value)}
+                onChange={e => handleInputChange('customerEmail', e.target.value)}
                 placeholder="your.email@example.com"
                 required
                 disabled={state.isLoading}
@@ -150,7 +143,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = React.memo(({
                 type="tel"
                 id="phone"
                 value={state.customerPhone}
-                onChange={(e) => handleInputChange('customerPhone', e.target.value)}
+                onChange={e => handleInputChange('customerPhone', e.target.value)}
                 placeholder="+60123456789"
                 required
                 disabled={state.isLoading}
@@ -190,7 +183,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = React.memo(({
                   `Pay ${currency} ${amount.toFixed(2)}`
                 )}
               </Button>
-              
+
               {onCancel && (
                 <Button
                   type="button"
@@ -231,7 +224,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = React.memo(({
               text-align: center;
               max-width: 400px;
               width: 90%;
-              box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+              box-shadow:
+                0 20px 25px -5px rgba(0, 0, 0, 0.1),
+                0 10px 10px -5px rgba(0, 0, 0, 0.04);
             }
 
             .payment-overlay__content h3 {
@@ -393,13 +388,14 @@ export const PaymentForm: React.FC<PaymentFormProps> = React.memo(({
               .payment-form {
                 padding: 1rem;
               }
-              
+
               .payment-form__actions {
                 flex-direction: column;
               }
             }
           `}</style>
         </Card>
-    </PaymentErrorBoundary>
-  );
-});
+      </PaymentErrorBoundary>
+    );
+  }
+);

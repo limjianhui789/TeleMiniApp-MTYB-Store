@@ -93,7 +93,7 @@ export class APIUtils {
         return await apiCall();
       } catch (error) {
         lastError = error;
-        
+
         if (attempt === maxAttempts) {
           throw error;
         }
@@ -110,10 +110,7 @@ export class APIUtils {
   /**
    * Add timeout to API calls
    */
-  static withTimeout<T>(
-    promise: Promise<T>,
-    timeoutMs = API_CONFIG.TIMEOUT
-  ): Promise<T> {
+  static withTimeout<T>(promise: Promise<T>, timeoutMs = API_CONFIG.TIMEOUT): Promise<T> {
     return Promise.race([
       promise,
       new Promise<never>((_, reject) => {
@@ -144,16 +141,16 @@ export class APIUtils {
    */
   static getErrorMessage(error: APIError): string {
     const messages: Record<string, string> = {
-      'NETWORK_ERROR': 'Connection failed. Please check your internet connection.',
-      'AUTHENTICATION_REQUIRED': 'Please log in to continue.',
-      'AUTHENTICATION_FAILED': 'Invalid credentials. Please try again.',
-      'PERMISSION_DENIED': 'You do not have permission to perform this action.',
-      'VALIDATION_ERROR': 'Please check your input and try again.',
-      'RATE_LIMIT_EXCEEDED': 'Too many requests. Please wait and try again.',
-      'SERVER_ERROR': 'Server error. Please try again later.',
-      'NOT_FOUND': 'The requested resource was not found.',
-      'PAYMENT_FAILED': 'Payment processing failed. Please try again.',
-      'UNKNOWN_ERROR': 'An unexpected error occurred.',
+      NETWORK_ERROR: 'Connection failed. Please check your internet connection.',
+      AUTHENTICATION_REQUIRED: 'Please log in to continue.',
+      AUTHENTICATION_FAILED: 'Invalid credentials. Please try again.',
+      PERMISSION_DENIED: 'You do not have permission to perform this action.',
+      VALIDATION_ERROR: 'Please check your input and try again.',
+      RATE_LIMIT_EXCEEDED: 'Too many requests. Please wait and try again.',
+      SERVER_ERROR: 'Server error. Please try again later.',
+      NOT_FOUND: 'The requested resource was not found.',
+      PAYMENT_FAILED: 'Payment processing failed. Please try again.',
+      UNKNOWN_ERROR: 'An unexpected error occurred.',
     };
 
     return messages[error.code] || error.message || 'An error occurred';
@@ -173,7 +170,7 @@ export class APIInterceptor {
   static addCommonHeaders(headers: Record<string, string> = {}): Record<string, string> {
     return {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: 'application/json',
       ...headers,
     };
   }
@@ -181,9 +178,7 @@ export class APIInterceptor {
   static processRequest(url: string, options: RequestInit = {}): [string, RequestInit] {
     const processedOptions: RequestInit = {
       ...options,
-      headers: this.addCommonHeaders(
-        this.addAuthHeader(options.headers as Record<string, string>)
-      ),
+      headers: this.addCommonHeaders(this.addAuthHeader(options.headers as Record<string, string>)),
     };
 
     return [url, processedOptions];

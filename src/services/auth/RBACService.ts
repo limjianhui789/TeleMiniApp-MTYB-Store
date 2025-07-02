@@ -40,7 +40,7 @@ export class RBACService {
    */
   async hasPermission(context: AccessContext): Promise<boolean> {
     const userRoles = this.getUserRoles(context.userId);
-    
+
     for (const roleName of userRoles) {
       const role = this.roles.get(roleName);
       if (!role) continue;
@@ -120,7 +120,7 @@ export class RBACService {
       id: this.generateId(),
       ...roleData,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.roles.set(role.name, role);
@@ -133,7 +133,7 @@ export class RBACService {
   async createPermission(permissionData: Omit<Permission, 'id'>): Promise<Permission> {
     const permission: Permission = {
       id: this.generateId(),
-      ...permissionData
+      ...permissionData,
     };
 
     this.permissions.set(permission.name, permission);
@@ -188,36 +188,132 @@ export class RBACService {
   private initializeSystemRoles(): void {
     // User role
     const userPermissions: Permission[] = [
-      { id: '1', name: 'plugin:install', description: 'Install plugins', resource: 'plugin', action: 'install' },
-      { id: '2', name: 'plugin:uninstall', description: 'Uninstall plugins', resource: 'plugin', action: 'uninstall' },
-      { id: '3', name: 'plugin:review', description: 'Review plugins', resource: 'plugin', action: 'review' },
-      { id: '4', name: 'order:create', description: 'Create orders', resource: 'order', action: 'create' },
-      { id: '5', name: 'profile:read', description: 'Read own profile', resource: 'profile', action: 'read', conditions: { owner: true } },
-      { id: '6', name: 'profile:update', description: 'Update own profile', resource: 'profile', action: 'update', conditions: { owner: true } }
+      {
+        id: '1',
+        name: 'plugin:install',
+        description: 'Install plugins',
+        resource: 'plugin',
+        action: 'install',
+      },
+      {
+        id: '2',
+        name: 'plugin:uninstall',
+        description: 'Uninstall plugins',
+        resource: 'plugin',
+        action: 'uninstall',
+      },
+      {
+        id: '3',
+        name: 'plugin:review',
+        description: 'Review plugins',
+        resource: 'plugin',
+        action: 'review',
+      },
+      {
+        id: '4',
+        name: 'order:create',
+        description: 'Create orders',
+        resource: 'order',
+        action: 'create',
+      },
+      {
+        id: '5',
+        name: 'profile:read',
+        description: 'Read own profile',
+        resource: 'profile',
+        action: 'read',
+        conditions: { owner: true },
+      },
+      {
+        id: '6',
+        name: 'profile:update',
+        description: 'Update own profile',
+        resource: 'profile',
+        action: 'update',
+        conditions: { owner: true },
+      },
     ];
 
     // Developer role
     const developerPermissions: Permission[] = [
       ...userPermissions,
-      { id: '7', name: 'plugin:create', description: 'Create plugins', resource: 'plugin', action: 'create' },
-      { id: '8', name: 'plugin:update', description: 'Update own plugins', resource: 'plugin', action: 'update', conditions: { owner: true } },
-      { id: '9', name: 'plugin:publish', description: 'Publish own plugins', resource: 'plugin', action: 'publish', conditions: { owner: true } },
-      { id: '10', name: 'earnings:read', description: 'Read earnings', resource: 'earnings', action: 'read', conditions: { owner: true } },
-      { id: '11', name: 'analytics:plugin', description: 'View plugin analytics', resource: 'analytics', action: 'read', conditions: { owner: true } }
+      {
+        id: '7',
+        name: 'plugin:create',
+        description: 'Create plugins',
+        resource: 'plugin',
+        action: 'create',
+      },
+      {
+        id: '8',
+        name: 'plugin:update',
+        description: 'Update own plugins',
+        resource: 'plugin',
+        action: 'update',
+        conditions: { owner: true },
+      },
+      {
+        id: '9',
+        name: 'plugin:publish',
+        description: 'Publish own plugins',
+        resource: 'plugin',
+        action: 'publish',
+        conditions: { owner: true },
+      },
+      {
+        id: '10',
+        name: 'earnings:read',
+        description: 'Read earnings',
+        resource: 'earnings',
+        action: 'read',
+        conditions: { owner: true },
+      },
+      {
+        id: '11',
+        name: 'analytics:plugin',
+        description: 'View plugin analytics',
+        resource: 'analytics',
+        action: 'read',
+        conditions: { owner: true },
+      },
     ];
 
     // Moderator role
     const moderatorPermissions: Permission[] = [
       ...userPermissions,
-      { id: '12', name: 'plugin:moderate', description: 'Moderate plugins', resource: 'plugin', action: 'moderate' },
-      { id: '13', name: 'user:moderate', description: 'Moderate users', resource: 'user', action: 'moderate' },
-      { id: '14', name: 'review:moderate', description: 'Moderate reviews', resource: 'review', action: 'moderate' },
-      { id: '15', name: 'report:view', description: 'View reports', resource: 'report', action: 'read' }
+      {
+        id: '12',
+        name: 'plugin:moderate',
+        description: 'Moderate plugins',
+        resource: 'plugin',
+        action: 'moderate',
+      },
+      {
+        id: '13',
+        name: 'user:moderate',
+        description: 'Moderate users',
+        resource: 'user',
+        action: 'moderate',
+      },
+      {
+        id: '14',
+        name: 'review:moderate',
+        description: 'Moderate reviews',
+        resource: 'review',
+        action: 'moderate',
+      },
+      {
+        id: '15',
+        name: 'report:view',
+        description: 'View reports',
+        resource: 'report',
+        action: 'read',
+      },
     ];
 
     // Admin role
     const adminPermissions: Permission[] = [
-      { id: '16', name: 'admin:all', description: 'Full admin access', resource: '*', action: '*' }
+      { id: '16', name: 'admin:all', description: 'Full admin access', resource: '*', action: '*' },
     ];
 
     // Create system roles
@@ -228,7 +324,7 @@ export class RBACService {
       permissions: userPermissions,
       isSystemRole: true,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
 
     this.roles.set('developer', {
@@ -238,7 +334,7 @@ export class RBACService {
       permissions: developerPermissions,
       isSystemRole: true,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
 
     this.roles.set('moderator', {
@@ -248,7 +344,7 @@ export class RBACService {
       permissions: moderatorPermissions,
       isSystemRole: true,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
 
     this.roles.set('admin', {
@@ -258,12 +354,16 @@ export class RBACService {
       permissions: adminPermissions,
       isSystemRole: true,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
 
     // Store all permissions
-    [...userPermissions, ...developerPermissions, ...moderatorPermissions, ...adminPermissions]
-      .forEach(p => this.permissions.set(p.name, p));
+    [
+      ...userPermissions,
+      ...developerPermissions,
+      ...moderatorPermissions,
+      ...adminPermissions,
+    ].forEach(p => this.permissions.set(p.name, p));
   }
 
   private generateId(): string {

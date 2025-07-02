@@ -77,7 +77,7 @@ class AuthAPI {
       return {
         success: false,
         error: 'NETWORK_ERROR',
-        message: error instanceof Error ? error.message : 'Network error'
+        message: error instanceof Error ? error.message : 'Network error',
       };
     }
   }
@@ -100,7 +100,7 @@ class AuthAPI {
       return {
         success: false,
         error: 'NETWORK_ERROR',
-        message: error instanceof Error ? error.message : 'Network error'
+        message: error instanceof Error ? error.message : 'Network error',
       };
     }
   }
@@ -123,7 +123,7 @@ class AuthAPI {
       return {
         success: false,
         error: 'NETWORK_ERROR',
-        message: error instanceof Error ? error.message : 'Network error'
+        message: error instanceof Error ? error.message : 'Network error',
       };
     }
   }
@@ -138,22 +138,22 @@ class AuthAPI {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         this.clearStoredTokens();
       }
-      
+
       return result;
     } catch (error) {
       return {
         success: false,
         error: 'NETWORK_ERROR',
-        message: error instanceof Error ? error.message : 'Network error'
+        message: error instanceof Error ? error.message : 'Network error',
       };
     }
   }
@@ -168,22 +168,22 @@ class AuthAPI {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         this.clearStoredTokens();
       }
-      
+
       return result;
     } catch (error) {
       return {
         success: false,
         error: 'NETWORK_ERROR',
-        message: error instanceof Error ? error.message : 'Network error'
+        message: error instanceof Error ? error.message : 'Network error',
       };
     }
   }
@@ -198,7 +198,7 @@ class AuthAPI {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
       });
 
@@ -207,7 +207,7 @@ class AuthAPI {
       return {
         success: false,
         error: 'NETWORK_ERROR',
-        message: error instanceof Error ? error.message : 'Network error'
+        message: error instanceof Error ? error.message : 'Network error',
       };
     }
   }
@@ -215,14 +215,16 @@ class AuthAPI {
   /**
    * Change password
    */
-  async changePassword(request: ChangePasswordRequest): Promise<{ success: boolean; message?: string; error?: string }> {
+  async changePassword(
+    request: ChangePasswordRequest
+  ): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       const token = this.getStoredToken();
       const response = await fetch(`${this.baseURL}/auth/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
         body: JSON.stringify(request),
       });
@@ -232,7 +234,7 @@ class AuthAPI {
       return {
         success: false,
         error: 'NETWORK_ERROR',
-        message: error instanceof Error ? error.message : 'Network error'
+        message: error instanceof Error ? error.message : 'Network error',
       };
     }
   }
@@ -240,14 +242,20 @@ class AuthAPI {
   /**
    * Enable two-factor authentication
    */
-  async enableTwoFactor(request: TwoFactorRequest): Promise<{ success: boolean; data?: { backupCodes: string; message: string }; error?: string }> {
+  async enableTwoFactor(
+    request: TwoFactorRequest
+  ): Promise<{
+    success: boolean;
+    data?: { backupCodes: string; message: string };
+    error?: string;
+  }> {
     try {
       const token = this.getStoredToken();
       const response = await fetch(`${this.baseURL}/auth/2fa/enable`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
         body: JSON.stringify(request),
       });
@@ -256,7 +264,7 @@ class AuthAPI {
     } catch (error) {
       return {
         success: false,
-        error: 'NETWORK_ERROR'
+        error: 'NETWORK_ERROR',
       };
     }
   }
@@ -264,14 +272,16 @@ class AuthAPI {
   /**
    * Disable two-factor authentication
    */
-  async disableTwoFactor(request: TwoFactorRequest): Promise<{ success: boolean; message?: string; error?: string }> {
+  async disableTwoFactor(
+    request: TwoFactorRequest
+  ): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       const token = this.getStoredToken();
       const response = await fetch(`${this.baseURL}/auth/2fa/disable`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
         body: JSON.stringify(request),
       });
@@ -281,7 +291,7 @@ class AuthAPI {
       return {
         success: false,
         error: 'NETWORK_ERROR',
-        message: error instanceof Error ? error.message : 'Network error'
+        message: error instanceof Error ? error.message : 'Network error',
       };
     }
   }
@@ -289,14 +299,19 @@ class AuthAPI {
   /**
    * Get user permissions
    */
-  async getPermissions(): Promise<{ success: boolean; data?: any; error?: string; message?: string }> {
+  async getPermissions(): Promise<{
+    success: boolean;
+    data?: any;
+    error?: string;
+    message?: string;
+  }> {
     try {
       const token = this.getStoredToken();
       const response = await fetch(`${this.baseURL}/auth/permissions`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
       });
 
@@ -305,7 +320,7 @@ class AuthAPI {
       return {
         success: false,
         error: 'NETWORK_ERROR',
-        message: error instanceof Error ? error.message : 'Network error'
+        message: error instanceof Error ? error.message : 'Network error',
       };
     }
   }
@@ -313,14 +328,19 @@ class AuthAPI {
   /**
    * Validate current token
    */
-  async validateToken(): Promise<{ success: boolean; data?: { valid: boolean; user?: any }; error?: string; message?: string }> {
+  async validateToken(): Promise<{
+    success: boolean;
+    data?: { valid: boolean; user?: any };
+    error?: string;
+    message?: string;
+  }> {
     try {
       const token = this.getStoredToken();
       const response = await fetch(`${this.baseURL}/auth/validate`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
       });
 
@@ -329,7 +349,7 @@ class AuthAPI {
       return {
         success: false,
         error: 'NETWORK_ERROR',
-        message: error instanceof Error ? error.message : 'Network error'
+        message: error instanceof Error ? error.message : 'Network error',
       };
     }
   }
@@ -360,12 +380,12 @@ class AuthAPI {
   // Auto-refresh token on 401 responses
   async makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
     const token = this.getStoredToken();
-    
+
     const response = await fetch(url, {
       ...options,
       headers: {
         ...options.headers,
-        'Authorization': token ? `Bearer ${token}` : '',
+        Authorization: token ? `Bearer ${token}` : '',
       },
     });
 
@@ -373,23 +393,23 @@ class AuthAPI {
     if (response.status === 401 && this.getStoredRefreshToken()) {
       const refreshToken = this.getStoredRefreshToken();
       const refreshResult = await this.refreshToken({ refreshToken: refreshToken! });
-      
+
       if (refreshResult.success && refreshResult.data?.tokens) {
         this.storeTokens(
           refreshResult.data.tokens.accessToken,
           refreshResult.data.tokens.refreshToken
         );
-        
+
         // Retry original request with new token
         return fetch(url, {
           ...options,
           headers: {
             ...options.headers,
-            'Authorization': `Bearer ${refreshResult.data.tokens.accessToken}`,
+            Authorization: `Bearer ${refreshResult.data.tokens.accessToken}`,
           },
         });
       }
-      
+
       // Refresh failed, clear tokens and redirect to login
       this.clearStoredTokens();
       window.location.href = '/login';

@@ -25,37 +25,101 @@ export class PermissionService {
     [UserRole.USER]: 1,
     [UserRole.DEVELOPER]: 2,
     [UserRole.MODERATOR]: 3,
-    [UserRole.ADMIN]: 4
+    [UserRole.ADMIN]: 4,
   };
 
   private readonly permissions: Record<UserRole, Permission[]> = {
     [UserRole.USER]: [
       { resource: 'plugin', action: 'read' },
       { resource: 'plugin', action: 'install' },
-      { resource: 'plugin', action: 'uninstall', conditions: [{ field: 'userId', operator: 'owner', value: null }] },
-      { resource: 'plugin', action: 'review', conditions: [{ field: 'status', operator: 'equals', value: 'published' }] },
-      { resource: 'profile', action: 'read', conditions: [{ field: 'userId', operator: 'owner', value: null }] },
-      { resource: 'profile', action: 'update', conditions: [{ field: 'userId', operator: 'owner', value: null }] },
+      {
+        resource: 'plugin',
+        action: 'uninstall',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
+      {
+        resource: 'plugin',
+        action: 'review',
+        conditions: [{ field: 'status', operator: 'equals', value: 'published' }],
+      },
+      {
+        resource: 'profile',
+        action: 'read',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
+      {
+        resource: 'profile',
+        action: 'update',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
       { resource: 'order', action: 'create' },
-      { resource: 'order', action: 'read', conditions: [{ field: 'userId', operator: 'owner', value: null }] },
-      { resource: 'analytics', action: 'read', conditions: [{ field: 'userId', operator: 'owner', value: null }] }
+      {
+        resource: 'order',
+        action: 'read',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
+      {
+        resource: 'analytics',
+        action: 'read',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
     ],
 
     [UserRole.DEVELOPER]: [
       { resource: 'plugin', action: 'read' },
       { resource: 'plugin', action: 'create' },
-      { resource: 'plugin', action: 'update', conditions: [{ field: 'authorId', operator: 'owner', value: null }] },
-      { resource: 'plugin', action: 'delete', conditions: [{ field: 'authorId', operator: 'owner', value: null }] },
-      { resource: 'plugin', action: 'publish', conditions: [{ field: 'authorId', operator: 'owner', value: null }] },
+      {
+        resource: 'plugin',
+        action: 'update',
+        conditions: [{ field: 'authorId', operator: 'owner', value: null }],
+      },
+      {
+        resource: 'plugin',
+        action: 'delete',
+        conditions: [{ field: 'authorId', operator: 'owner', value: null }],
+      },
+      {
+        resource: 'plugin',
+        action: 'publish',
+        conditions: [{ field: 'authorId', operator: 'owner', value: null }],
+      },
       { resource: 'plugin', action: 'install' },
-      { resource: 'plugin', action: 'uninstall', conditions: [{ field: 'userId', operator: 'owner', value: null }] },
-      { resource: 'plugin', action: 'review', conditions: [{ field: 'status', operator: 'equals', value: 'published' }] },
-      { resource: 'profile', action: 'read', conditions: [{ field: 'userId', operator: 'owner', value: null }] },
-      { resource: 'profile', action: 'update', conditions: [{ field: 'userId', operator: 'owner', value: null }] },
+      {
+        resource: 'plugin',
+        action: 'uninstall',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
+      {
+        resource: 'plugin',
+        action: 'review',
+        conditions: [{ field: 'status', operator: 'equals', value: 'published' }],
+      },
+      {
+        resource: 'profile',
+        action: 'read',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
+      {
+        resource: 'profile',
+        action: 'update',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
       { resource: 'order', action: 'create' },
-      { resource: 'order', action: 'read', conditions: [{ field: 'userId', operator: 'owner', value: null }] },
-      { resource: 'earnings', action: 'read', conditions: [{ field: 'developerId', operator: 'owner', value: null }] },
-      { resource: 'analytics', action: 'read', conditions: [{ field: 'authorId', operator: 'owner', value: null }] }
+      {
+        resource: 'order',
+        action: 'read',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
+      {
+        resource: 'earnings',
+        action: 'read',
+        conditions: [{ field: 'developerId', operator: 'owner', value: null }],
+      },
+      {
+        resource: 'analytics',
+        action: 'read',
+        conditions: [{ field: 'authorId', operator: 'owner', value: null }],
+      },
     ],
 
     [UserRole.MODERATOR]: [
@@ -65,39 +129,66 @@ export class PermissionService {
       { resource: 'plugin', action: 'reject' },
       { resource: 'plugin', action: 'suspend' },
       { resource: 'plugin', action: 'install' },
-      { resource: 'plugin', action: 'uninstall', conditions: [{ field: 'userId', operator: 'owner', value: null }] },
+      {
+        resource: 'plugin',
+        action: 'uninstall',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
       { resource: 'plugin', action: 'review' },
       { resource: 'user', action: 'read' },
       { resource: 'user', action: 'moderate' },
-      { resource: 'user', action: 'suspend', conditions: [{ field: 'role', operator: 'role_hierarchy', value: 'lower' }] },
+      {
+        resource: 'user',
+        action: 'suspend',
+        conditions: [{ field: 'role', operator: 'role_hierarchy', value: 'lower' }],
+      },
       { resource: 'review', action: 'read' },
       { resource: 'review', action: 'moderate' },
       { resource: 'review', action: 'hide' },
       { resource: 'review', action: 'flag' },
-      { resource: 'profile', action: 'read', conditions: [{ field: 'userId', operator: 'owner', value: null }] },
-      { resource: 'profile', action: 'update', conditions: [{ field: 'userId', operator: 'owner', value: null }] },
+      {
+        resource: 'profile',
+        action: 'read',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
+      {
+        resource: 'profile',
+        action: 'update',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
       { resource: 'order', action: 'create' },
-      { resource: 'order', action: 'read', conditions: [{ field: 'userId', operator: 'owner', value: null }] },
-      { resource: 'analytics', action: 'read', conditions: [{ field: 'scope', operator: 'equals', value: 'moderation' }] }
+      {
+        resource: 'order',
+        action: 'read',
+        conditions: [{ field: 'userId', operator: 'owner', value: null }],
+      },
+      {
+        resource: 'analytics',
+        action: 'read',
+        conditions: [{ field: 'scope', operator: 'equals', value: 'moderation' }],
+      },
     ],
 
-    [UserRole.ADMIN]: [
-      { resource: '*', action: '*' }
-    ]
+    [UserRole.ADMIN]: [{ resource: '*', action: '*' }],
   };
 
-  hasPermission(userRole: UserRole, resource: string, action: string, context?: PermissionContext): boolean {
+  hasPermission(
+    userRole: UserRole,
+    resource: string,
+    action: string,
+    context?: PermissionContext
+  ): boolean {
     const userPermissions = this.permissions[userRole] || [];
-    
+
     // Check for wildcard admin permissions
     if (userPermissions.some(p => p.resource === '*' && p.action === '*')) {
       return true;
     }
 
     // Find matching permissions
-    const matchingPermissions = userPermissions.filter(p => 
-      (p.resource === resource || p.resource === '*') &&
-      (p.action === action || p.action === '*')
+    const matchingPermissions = userPermissions.filter(
+      p =>
+        (p.resource === resource || p.resource === '*') && (p.action === action || p.action === '*')
     );
 
     if (matchingPermissions.length === 0) {
@@ -106,23 +197,33 @@ export class PermissionService {
 
     // Check conditions if context is provided
     if (context) {
-      return matchingPermissions.some(permission => 
+      return matchingPermissions.some(permission =>
         this.checkConditions(permission.conditions || [], context)
       );
     }
 
     // If no context provided, allow permissions without conditions
-    return matchingPermissions.some(permission => !permission.conditions || permission.conditions.length === 0);
+    return matchingPermissions.some(
+      permission => !permission.conditions || permission.conditions.length === 0
+    );
   }
 
-  hasAnyPermission(userRole: UserRole, permissions: Array<{ resource: string; action: string }>, context?: PermissionContext): boolean {
-    return permissions.some(({ resource, action }) => 
+  hasAnyPermission(
+    userRole: UserRole,
+    permissions: Array<{ resource: string; action: string }>,
+    context?: PermissionContext
+  ): boolean {
+    return permissions.some(({ resource, action }) =>
       this.hasPermission(userRole, resource, action, context)
     );
   }
 
-  hasAllPermissions(userRole: UserRole, permissions: Array<{ resource: string; action: string }>, context?: PermissionContext): boolean {
-    return permissions.every(({ resource, action }) => 
+  hasAllPermissions(
+    userRole: UserRole,
+    permissions: Array<{ resource: string; action: string }>,
+    context?: PermissionContext
+  ): boolean {
+    return permissions.every(({ resource, action }) =>
       this.hasPermission(userRole, resource, action, context)
     );
   }
@@ -137,27 +238,39 @@ export class PermissionService {
   }
 
   canAccessResource(userRole: UserRole, resource: string, context?: PermissionContext): boolean {
-    return this.hasAnyPermission(userRole, [
-      { resource, action: 'read' },
-      { resource, action: 'create' },
-      { resource, action: 'update' },
-      { resource, action: 'delete' }
-    ], context);
+    return this.hasAnyPermission(
+      userRole,
+      [
+        { resource, action: 'read' },
+        { resource, action: 'create' },
+        { resource, action: 'update' },
+        { resource, action: 'delete' },
+      ],
+      context
+    );
   }
 
   canModifyResource(userRole: UserRole, resource: string, context?: PermissionContext): boolean {
-    return this.hasAnyPermission(userRole, [
-      { resource, action: 'create' },
-      { resource, action: 'update' },
-      { resource, action: 'delete' }
-    ], context);
+    return this.hasAnyPermission(
+      userRole,
+      [
+        { resource, action: 'create' },
+        { resource, action: 'update' },
+        { resource, action: 'delete' },
+      ],
+      context
+    );
   }
 
-  getPermissionFilters(userRole: UserRole, resource: string, action: string): PermissionCondition[] {
+  getPermissionFilters(
+    userRole: UserRole,
+    resource: string,
+    action: string
+  ): PermissionCondition[] {
     const userPermissions = this.getUserPermissions(userRole);
-    const matchingPermission = userPermissions.find(p => 
-      (p.resource === resource || p.resource === '*') &&
-      (p.action === action || p.action === '*')
+    const matchingPermission = userPermissions.find(
+      p =>
+        (p.resource === resource || p.resource === '*') && (p.action === action || p.action === '*')
     );
 
     return matchingPermission?.conditions || [];
@@ -231,15 +344,19 @@ export class PermissionService {
     }
   }
 
-  createPermissionContext(userId: string, userRole: UserRole, options: {
-    resourceId?: string;
-    resourceOwnerId?: string;
-    additionalData?: Record<string, any>;
-  } = {}): PermissionContext {
+  createPermissionContext(
+    userId: string,
+    userRole: UserRole,
+    options: {
+      resourceId?: string;
+      resourceOwnerId?: string;
+      additionalData?: Record<string, any>;
+    } = {}
+  ): PermissionContext {
     return {
       userId,
       userRole,
-      ...options
+      ...options,
     };
   }
 }

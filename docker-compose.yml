@@ -14,7 +14,7 @@ services:
     container_name: mtyb-shop-app
     restart: unless-stopped
     ports:
-      - "80:80"
+      - '80:80'
     environment:
       - NODE_ENV=production
     env_file:
@@ -26,7 +26,7 @@ services:
     depends_on:
       - api
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:80/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -38,13 +38,13 @@ services:
     container_name: mtyb-shop-api
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - '3000:80'
     volumes:
       - ./api-placeholder.html:/usr/share/nginx/html/index.html:ro
     networks:
       - mtyb-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:80/']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -55,14 +55,14 @@ services:
     container_name: mtyb-shop-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis-data:/data
     networks:
       - mtyb-network
     command: redis-server --appendonly yes
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -73,7 +73,7 @@ services:
     container_name: mtyb-shop-metrics
     restart: unless-stopped
     ports:
-      - "9113:9113"
+      - '9113:9113'
     command:
       - '-nginx.scrape-uri=http://app:80/nginx_status'
     networks:
