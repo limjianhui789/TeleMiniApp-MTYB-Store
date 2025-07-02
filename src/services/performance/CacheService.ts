@@ -34,7 +34,7 @@ export class CacheService {
     sets: 0,
     deletes: 0,
     size: 0,
-    hitRate: 0
+    hitRate: 0,
   };
 
   constructor(config: CacheConfig = { maxSize: 1000, ttl: 300000 }) {
@@ -42,14 +42,14 @@ export class CacheService {
       max: config.maxSize,
       ttl: config.ttl,
       updateAgeOnGet: config.updateAgeOnGet ?? true,
-      allowStale: config.allowStale ?? false
+      allowStale: config.allowStale ?? false,
     });
   }
 
   // Memory caching methods
   async get<T>(key: string): Promise<T | null> {
     const cacheKey = this.generateCacheKey(key);
-    
+
     // Try memory cache first
     const memoryEntry = this.memoryCache.get(cacheKey);
     if (memoryEntry && !this.isExpired(memoryEntry)) {
@@ -81,35 +81,35 @@ export class CacheService {
     const cacheKey = this.generateCacheKey(key);
     const now = new Date();
     const expirationTime = ttl || 300000; // 5 minutes default
-    
+
     const entry: CacheEntry<T> = {
       value,
       createdAt: now,
       expiresAt: new Date(now.getTime() + expirationTime),
       accessCount: 0,
-      lastAccessed: now
+      lastAccessed: now,
     };
 
     // Set in both memory and distributed cache
     this.memoryCache.set(cacheKey, entry);
     this.distributedCache.set(cacheKey, entry);
-    
+
     this.stats.sets++;
     this.stats.size = this.memoryCache.size;
   }
 
   async delete(key: string): Promise<boolean> {
     const cacheKey = this.generateCacheKey(key);
-    
+
     const memoryDeleted = this.memoryCache.delete(cacheKey);
     const distributedDeleted = this.distributedCache.delete(cacheKey);
-    
+
     if (memoryDeleted || distributedDeleted) {
       this.stats.deletes++;
       this.stats.size = this.memoryCache.size;
       return true;
     }
-    
+
     return false;
   }
 
@@ -120,53 +120,42 @@ export class CacheService {
   }
 
   // Cache patterns
-  async getOrSet<T>(
-    key: string, 
-    factory: () => Promise<T>, 
-    ttl?: number
-  ): Promise<T> {
+  async getOrSet<T>(key: string, factory: () => Promise<T>, ttl?: number): Promise<T> {
     let value = await this.get<T>(key);
-    
+
     if (value === null) {
       value = await factory();
       await this.set(key, value, ttl);
     }
-    
+
     return value;
   }
 
   async mget<T>(keys: string[]): Promise<Array<T | null>> {
     const results: Array<T | null> = [];
-    
+
     for (const key of keys) {
       results.push(await this.get<T>(key));
     }
-    
+
     return results;
   }
 
   async mset<T>(entries: Array<{ key: string; value: T; ttl?: number }>): Promise<void> {
-    const promises = entries.map(entry => 
-      this.set(entry.key, entry.value, entry.ttl)
-    );
-    
+    const promises = entries.map(entry => this.set(entry.key, entry.value, entry.ttl));
+
     await Promise.all(promises);
   }
 
   // Tag-based caching
-  async setWithTags<T>(
-    key: string, 
-    value: T, 
-    tags: string[], 
-    ttl?: number
-  ): Promise<void> {
+  async setWithTags<T>(key: string, value: T, tags: string[], ttl?: number): Promise<void> {
     await this.set(key, value, ttl);
-    
+
     // Store tag relationships
     for (const tag of tags) {
       const tagKey = `tag:${tag}`;
-      const taggedKeys = await this.get<string[]>(tagKey) || [];
-      
+      const taggedKeys = (await this.get<string[]>(tagKey)) || [];
+
       if (!taggedKeys.includes(key)) {
         taggedKeys.push(key);
         await this.set(tagKey, taggedKeys, ttl);
@@ -177,7 +166,7 @@ export class CacheService {
   async invalidateByTag(tag: string): Promise<void> {
     const tagKey = `tag:${tag}`;
     const taggedKeys = await this.get<string[]>(tagKey);
-    
+
     if (taggedKeys) {
       const deletePromises = taggedKeys.map(key => this.delete(key));
       await Promise.all(deletePromises);
@@ -189,7 +178,7 @@ export class CacheService {
   getStats(): CacheStats {
     return {
       ...this.stats,
-      size: this.memoryCache.size
+      size: this.memoryCache.size,
     };
   }
 
@@ -198,10 +187,12 @@ export class CacheService {
   }
 
   // Cache warming
-  async warmup(warmupData: Array<{ key: string; factory: () => Promise<any>; ttl?: number }>): Promise<void> {
+  async warmup(
+    warmupData: Array<{ key: string; factory: () => Promise<any>; ttl?: number }>
+  ): Promise<void> {
     console.log(`🔥 Warming up cache with ${warmupData.length} entries...`);
-    
-    const promises = warmupData.map(async (item) => {
+
+    const promises = warmupData.map(async item => {
       try {
         const value = await item.factory();
         await this.set(item.key, value, item.ttl);
@@ -209,7 +200,7 @@ export class CacheService {
         console.error(`Cache warmup failed for key ${item.key}:`, error);
       }
     });
-    
+
     await Promise.all(promises);
     console.log('✅ Cache warmup completed');
   }
@@ -224,7 +215,7 @@ export class CacheService {
   async getCompressed<T>(key: string): Promise<T | null> {
     const compressed = await this.get<Buffer>(`compressed:${key}`);
     if (!compressed) return null;
-    
+
     const decompressed = await this.decompress(compressed);
     return JSON.parse(decompressed);
   }
@@ -247,7 +238,7 @@ export class CacheService {
     const { gzip } = await import('zlib');
     const { promisify } = await import('util');
     const gzipAsync = promisify(gzip);
-    
+
     return await gzipAsync(Buffer.from(data, 'utf8'));
   }
 
@@ -255,7 +246,7 @@ export class CacheService {
     const { gunzip } = await import('zlib');
     const { promisify } = await import('util');
     const gunzipAsync = promisify(gunzip);
-    
+
     const decompressed = await gunzipAsync(data);
     return decompressed.toString('utf8');
   }
@@ -263,17 +254,17 @@ export class CacheService {
   // Cleanup expired entries
   cleanup(): void {
     const expiredKeys: string[] = [];
-    
+
     for (const [key, entry] of this.distributedCache.entries()) {
       if (this.isExpired(entry)) {
         expiredKeys.push(key);
       }
     }
-    
+
     for (const key of expiredKeys) {
       this.distributedCache.delete(key);
     }
-    
+
     this.stats.size = this.memoryCache.size;
   }
 }
@@ -293,17 +284,25 @@ export class PluginCacheService extends CacheService {
   }
 
   async getFeaturedPlugins() {
-    return this.getOrSet('plugins:featured', async () => {
-      // In a real implementation, fetch from database
-      return [];
-    }, 300000); // 5 minutes
+    return this.getOrSet(
+      'plugins:featured',
+      async () => {
+        // In a real implementation, fetch from database
+        return [];
+      },
+      300000
+    ); // 5 minutes
   }
 
   async getPluginsByCategory(category: string) {
-    return this.getOrSet(`plugins:category:${category}`, async () => {
-      // In a real implementation, fetch from database
-      return [];
-    }, 600000); // 10 minutes
+    return this.getOrSet(
+      `plugins:category:${category}`,
+      async () => {
+        // In a real implementation, fetch from database
+        return [];
+      },
+      600000
+    ); // 10 minutes
   }
 
   async invalidatePluginCache(pluginId: string) {
@@ -326,10 +325,14 @@ export class UserCacheService extends CacheService {
   }
 
   async getUserPermissions(userId: string) {
-    return this.getOrSet(`user:${userId}:permissions`, async () => {
-      // In a real implementation, calculate permissions
-      return [];
-    }, 1800000); // 30 minutes
+    return this.getOrSet(
+      `user:${userId}:permissions`,
+      async () => {
+        // In a real implementation, calculate permissions
+        return [];
+      },
+      1800000
+    ); // 30 minutes
   }
 
   async invalidateUserCache(userId: string) {

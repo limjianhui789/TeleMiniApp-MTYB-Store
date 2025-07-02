@@ -2,7 +2,8 @@
 // MTYB Virtual Goods Platform - Price Management Service
 // ============================================================================
 
-import { ApiResponse, Product, ProductCategory } from '../../types';
+import type { ApiResponse, Product } from '../../types';
+import { ProductCategory } from '../../types';
 import { Logger } from '../../core/utils/Logger';
 import { EventEmitter } from '../../core/utils/EventEmitter';
 
@@ -228,10 +229,23 @@ export class PriceService extends EventEmitter {
         };
       }
 
+      const existingRule = this.priceRules[ruleIndex];
+      if (!existingRule) {
+        return {
+          success: false,
+          error: {
+            code: 'RULE_NOT_FOUND',
+            message: 'Price rule not found',
+          },
+        };
+      }
+
       const updatedRule: PriceRule = {
-        ...this.priceRules[ruleIndex],
+        ...existingRule,
         ...updates,
         id, // Preserve original ID
+        name: updates.name || existingRule.name, // Ensure name is always defined
+        ruleType: updates.ruleType || existingRule.ruleType, // Ensure ruleType is always defined
         updatedAt: new Date(),
       };
 

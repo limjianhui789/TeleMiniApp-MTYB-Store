@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { ComponentType } from 'react';
+import type { ComponentType } from 'react';
 
 // Code splitting utilities
 export const createLazyComponent = <T extends ComponentType<any>>(
@@ -7,7 +7,7 @@ export const createLazyComponent = <T extends ComponentType<any>>(
   fallback?: ComponentType
 ) => {
   const LazyComponent = lazy(importFn);
-  
+
   return (props: any) => (
     <Suspense fallback={fallback ? fallback({}) : <div>Loading...</div>}>
       <LazyComponent {...props} />
@@ -20,7 +20,7 @@ export class ResourceOptimizer {
   private static instance: ResourceOptimizer;
   private loadedResources = new Set<string>();
   private preloadQueue: string[] = [];
-  
+
   static getInstance(): ResourceOptimizer {
     if (!ResourceOptimizer.instance) {
       ResourceOptimizer.instance = new ResourceOptimizer();
@@ -29,28 +29,34 @@ export class ResourceOptimizer {
   }
 
   // Image optimization
-  optimizeImageUrl(url: string, options: {
-    width?: number;
-    height?: number;
-    quality?: number;
-    format?: 'webp' | 'avif' | 'jpeg' | 'png';
-  } = {}): string {
+  optimizeImageUrl(
+    url: string,
+    options: {
+      width?: number;
+      height?: number;
+      quality?: number;
+      format?: 'webp' | 'avif' | 'jpeg' | 'png';
+    } = {}
+  ): string {
     const { width, height, quality = 85, format = 'webp' } = options;
-    
+
     // If using a CDN service like Cloudinary or ImageKit
     const params = new URLSearchParams();
-    
+
     if (width) params.append('w', width.toString());
     if (height) params.append('h', height.toString());
     params.append('q', quality.toString());
     params.append('f', format);
-    
+
     // For demo purposes, return original URL with query params
     return `${url}?${params.toString()}`;
   }
 
   // Preload critical resources
-  preloadResource(url: string, type: 'script' | 'style' | 'image' | 'font' = 'script'): Promise<void> {
+  preloadResource(
+    url: string,
+    type: 'script' | 'style' | 'image' | 'font' = 'script'
+  ): Promise<void> {
     if (this.loadedResources.has(url)) {
       return Promise.resolve();
     }
@@ -59,7 +65,7 @@ export class ResourceOptimizer {
       const link = document.createElement('link');
       link.rel = 'preload';
       link.href = url;
-      
+
       switch (type) {
         case 'script':
           link.as = 'script';
@@ -75,24 +81,24 @@ export class ResourceOptimizer {
           link.crossOrigin = 'anonymous';
           break;
       }
-      
+
       link.onload = () => {
         this.loadedResources.add(url);
         resolve();
       };
-      
+
       link.onerror = reject;
-      
+
       document.head.appendChild(link);
     });
   }
 
   // Batch preload resources
-  async preloadResources(resources: Array<{ url: string; type: 'script' | 'style' | 'image' | 'font' }>): Promise<void> {
-    const promises = resources.map(resource => 
-      this.preloadResource(resource.url, resource.type)
-    );
-    
+  async preloadResources(
+    resources: Array<{ url: string; type: 'script' | 'style' | 'image' | 'font' }>
+  ): Promise<void> {
+    const promises = resources.map(resource => this.preloadResource(resource.url, resource.type));
+
     await Promise.allSettled(promises);
   }
 
@@ -106,14 +112,14 @@ export class ResourceOptimizer {
       const script = document.createElement('script');
       script.src = url;
       script.async = true;
-      
+
       script.onload = () => {
         this.loadedResources.add(url);
         resolve();
       };
-      
+
       script.onerror = reject;
-      
+
       document.head.appendChild(script);
     });
   }
@@ -128,20 +134,22 @@ export class ResourceOptimizer {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = url;
-      
+
       link.onload = () => {
         this.loadedResources.add(url);
         resolve();
       };
-      
+
       link.onerror = reject;
-      
+
       document.head.appendChild(link);
     });
   }
 
   // Service worker registration
-  async registerServiceWorker(swPath: string = '/sw.js'): Promise<ServiceWorkerRegistration | null> {
+  async registerServiceWorker(
+    swPath: string = '/sw.js'
+  ): Promise<ServiceWorkerRegistration | null> {
     if (!('serviceWorker' in navigator)) {
       console.warn('Service Worker not supported');
       return null;
@@ -174,7 +182,7 @@ export class BundleAnalyzer {
     for (const [name, chunk] of this.chunks.entries()) {
       report[name] = {
         ...chunk,
-        percentage: (chunk.size / totalSize) * 100
+        percentage: (chunk.size / totalSize) * 100,
       };
     }
 
@@ -183,14 +191,14 @@ export class BundleAnalyzer {
 
   getLargestChunks(limit: number = 5): Array<{ name: string; size: number; percentage: number }> {
     const report = this.getChunkReport();
-    
+
     return Object.entries(report)
       .sort(([, a], [, b]) => b.size - a.size)
       .slice(0, limit)
       .map(([name, data]) => ({
         name,
         size: data.size,
-        percentage: data.percentage
+        percentage: data.percentage,
       }));
   }
 
@@ -209,7 +217,7 @@ export class PerformanceBudget {
     firstContentfulPaint: 2000, // 2 seconds
     largestContentfulPaint: 4000, // 4 seconds
     timeToInteractive: 5000, // 5 seconds
-    cumulativeLayoutShift: 0.1
+    cumulativeLayoutShift: 0.1,
   };
 
   checkBudget(metrics: {
@@ -224,36 +232,50 @@ export class PerformanceBudget {
     const violations: string[] = [];
 
     if (metrics.jsSize && metrics.jsSize > this.budgets.totalJSSize) {
-      violations.push(`JavaScript size (${metrics.jsSize}) exceeds budget (${this.budgets.totalJSSize})`);
+      violations.push(
+        `JavaScript size (${metrics.jsSize}) exceeds budget (${this.budgets.totalJSSize})`
+      );
     }
 
     if (metrics.cssSize && metrics.cssSize > this.budgets.totalCSSSize) {
-      violations.push(`CSS size (${metrics.cssSize}) exceeds budget (${this.budgets.totalCSSSize})`);
+      violations.push(
+        `CSS size (${metrics.cssSize}) exceeds budget (${this.budgets.totalCSSSize})`
+      );
     }
 
     if (metrics.imageSize && metrics.imageSize > this.budgets.totalImageSize) {
-      violations.push(`Image size (${metrics.imageSize}) exceeds budget (${this.budgets.totalImageSize})`);
+      violations.push(
+        `Image size (${metrics.imageSize}) exceeds budget (${this.budgets.totalImageSize})`
+      );
     }
 
     if (metrics.fcp && metrics.fcp > this.budgets.firstContentfulPaint) {
-      violations.push(`First Contentful Paint (${metrics.fcp}ms) exceeds budget (${this.budgets.firstContentfulPaint}ms)`);
+      violations.push(
+        `First Contentful Paint (${metrics.fcp}ms) exceeds budget (${this.budgets.firstContentfulPaint}ms)`
+      );
     }
 
     if (metrics.lcp && metrics.lcp > this.budgets.largestContentfulPaint) {
-      violations.push(`Largest Contentful Paint (${metrics.lcp}ms) exceeds budget (${this.budgets.largestContentfulPaint}ms)`);
+      violations.push(
+        `Largest Contentful Paint (${metrics.lcp}ms) exceeds budget (${this.budgets.largestContentfulPaint}ms)`
+      );
     }
 
     if (metrics.tti && metrics.tti > this.budgets.timeToInteractive) {
-      violations.push(`Time to Interactive (${metrics.tti}ms) exceeds budget (${this.budgets.timeToInteractive}ms)`);
+      violations.push(
+        `Time to Interactive (${metrics.tti}ms) exceeds budget (${this.budgets.timeToInteractive}ms)`
+      );
     }
 
     if (metrics.cls && metrics.cls > this.budgets.cumulativeLayoutShift) {
-      violations.push(`Cumulative Layout Shift (${metrics.cls}) exceeds budget (${this.budgets.cumulativeLayoutShift})`);
+      violations.push(
+        `Cumulative Layout Shift (${metrics.cls}) exceeds budget (${this.budgets.cumulativeLayoutShift})`
+      );
     }
 
     return {
       passed: violations.length === 0,
-      violations
+      violations,
     };
   }
 
@@ -280,7 +302,7 @@ export class WebVitalsMonitor {
   }
 
   private monitorFCP(): void {
-    const observer = new PerformanceObserver((list) => {
+    const observer = new PerformanceObserver(list => {
       for (const entry of list.getEntries()) {
         if (entry.name === 'first-contentful-paint') {
           this.metrics.fcp = entry.startTime;
@@ -293,7 +315,7 @@ export class WebVitalsMonitor {
   }
 
   private monitorLCP(): void {
-    const observer = new PerformanceObserver((list) => {
+    const observer = new PerformanceObserver(list => {
       const entries = list.getEntries();
       const lastEntry = entries[entries.length - 1];
       this.metrics.lcp = lastEntry.startTime;
@@ -304,7 +326,7 @@ export class WebVitalsMonitor {
   }
 
   private monitorFID(): void {
-    const observer = new PerformanceObserver((list) => {
+    const observer = new PerformanceObserver(list => {
       for (const entry of list.getEntries()) {
         this.metrics.fid = (entry as any).processingStart - entry.startTime;
       }
@@ -316,8 +338,8 @@ export class WebVitalsMonitor {
 
   private monitorCLS(): void {
     let clsValue = 0;
-    
-    const observer = new PerformanceObserver((list) => {
+
+    const observer = new PerformanceObserver(list => {
       for (const entry of list.getEntries()) {
         if (!(entry as any).hadRecentInput) {
           clsValue += (entry as any).value;
@@ -331,7 +353,7 @@ export class WebVitalsMonitor {
   }
 
   private monitorTTFB(): void {
-    const observer = new PerformanceObserver((list) => {
+    const observer = new PerformanceObserver(list => {
       for (const entry of list.getEntries()) {
         if (entry.entryType === 'navigation') {
           this.metrics.ttfb = (entry as any).responseStart - entry.startTime;
@@ -357,8 +379,8 @@ export class LazyImageLoader {
   init(): void {
     if ('IntersectionObserver' in window) {
       this.observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
+        entries => {
+          entries.forEach(entry => {
             if (entry.isIntersecting) {
               const img = entry.target as HTMLImageElement;
               this.loadImage(img);
@@ -404,17 +426,17 @@ export class CriticalResourcePreloader {
     const criticalResources = [
       { url: '/api/plugins/featured', type: 'fetch' },
       { url: '/fonts/inter.woff2', type: 'font' },
-      { url: '/images/hero-bg.webp', type: 'image' }
+      { url: '/images/hero-bg.webp', type: 'image' },
     ];
 
-    const promises = criticalResources.map(async (resource) => {
+    const promises = criticalResources.map(async resource => {
       switch (resource.type) {
         case 'fetch':
           return fetch(resource.url, { priority: 'high' } as any);
         case 'font':
         case 'image':
           return ResourceOptimizer.getInstance().preloadResource(
-            resource.url, 
+            resource.url,
             resource.type as any
           );
         default:
@@ -438,7 +460,7 @@ export const criticalResourcePreloader = new CriticalResourcePreloader();
 if (typeof window !== 'undefined') {
   webVitalsMonitor.startMonitoring();
   lazyImageLoader.init();
-  
+
   // Preload critical resources on page load
   window.addEventListener('load', () => {
     criticalResourcePreloader.preloadCriticalResources();
@@ -450,27 +472,27 @@ export const performanceConfig = {
   codesplitting: {
     enabled: true,
     chunkStrategy: 'route-based',
-    vendorChunkThreshold: 100 * 1024 // 100KB
+    vendorChunkThreshold: 100 * 1024, // 100KB
   },
   bundleOptimization: {
     treeshaking: true,
     minification: true,
     compression: 'gzip',
-    sourceMaps: process.env.NODE_ENV === 'development'
+    sourceMaps: process.env.NODE_ENV === 'development',
   },
   caching: {
     staticAssets: {
       maxAge: 31536000, // 1 year
-      immutable: true
+      immutable: true,
     },
     apiResponses: {
       maxAge: 300, // 5 minutes
-      staleWhileRevalidate: 60
-    }
+      staleWhileRevalidate: 60,
+    },
   },
   preloading: {
     criticalResources: true,
     preloadLimit: 3,
-    prefetchOnHover: true
-  }
+    prefetchOnHover: true,
+  },
 };

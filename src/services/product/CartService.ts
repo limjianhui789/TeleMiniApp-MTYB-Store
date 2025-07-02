@@ -61,7 +61,7 @@ export class CartService extends EventEmitter {
   private savedForLater: CartItem[] = [];
   private priceCalculations: Record<string, PriceCalculationResult> = {};
   private autoRecalculateEnabled = true;
-  private recalculateTimer?: NodeJS.Timeout;
+  private recalculateTimer?: number;
 
   async addToCart(productId: string, quantity: number = 1): Promise<ApiResponse<CartItem>> {
     try {
@@ -744,8 +744,9 @@ export class CartService extends EventEmitter {
     const updatedItems: CartItem[] = [];
     const removedItems: CartItem[] = [];
 
-    for (let i = this.cartItems.length - 1; i >= 0; i--) {
+          for (let i = this.cartItems.length - 1; i >= 0; i--) {
       const item = this.cartItems[i];
+      if (!item) continue;
       const product = await productService.getProductById(item.productId);
 
       if (!product) {
@@ -772,7 +773,7 @@ export class CartService extends EventEmitter {
       }
 
       // Check if price has changed
-      if (product.price !== item.product.price) {
+      if (item && product.price !== item.product.price) {
         warnings.push(
           `Price for ${item.product.name} has changed from ${item.product.currency} ${item.product.price} to ${product.currency} ${product.price}`
         );
@@ -781,7 +782,7 @@ export class CartService extends EventEmitter {
       }
 
       // Check quantity against available stock
-      if (product.stock && item.quantity > product.stock.available) {
+      if (item && product.stock && item.quantity > product.stock.available) {
         warnings.push(
           `Reduced quantity for ${item.product.name} from ${item.quantity} to ${product.stock.available} (limited stock)`
         );
@@ -820,6 +821,16 @@ export class CartService extends EventEmitter {
       }
 
       const item = this.cartItems.splice(itemIndex, 1)[0];
+      if (!item) {
+        return {
+          success: false,
+          error: {
+            code: 'ITEM_NOT_FOUND',
+            message: 'Failed to remove item from cart',
+          },
+        };
+      }
+
       this.savedForLater.push(item);
 
       this.notifyListeners();
@@ -857,6 +868,15 @@ export class CartService extends EventEmitter {
       }
 
       const item = this.savedForLater.splice(itemIndex, 1)[0];
+      if (!item) {
+        return {
+          success: false,
+          error: {
+            code: 'ITEM_NOT_FOUND',
+            message: 'Failed to remove item from saved list',
+          },
+        };
+      }
 
       // Validate item is still available
       const stockAvailable = await productService.checkStock(item.productId);
@@ -952,10 +972,10 @@ export class CartService extends EventEmitter {
     if (!this.autoRecalculateEnabled) return;
 
     if (this.recalculateTimer) {
-      clearTimeout(this.recalculateTimer);
+      window.clearTimeout(this.recalculateTimer);
     }
 
-    this.recalculateTimer = setTimeout(() => {
+    this.recalculateTimer = window.setTimeout(() => {
       this.recalculateAllPrices();
     }, 1000); // Debounce for 1 second
   }
@@ -1030,7 +1050,7 @@ export class CartService extends EventEmitter {
 
     // Bundle discount detection (example: VPN + Security bundle)
     const hasVpn = this.cartItems.some(item => item.product.category === 'vpn');
-    const hasSecurity = this.cartItems.some(item => item.product.category === 'security');
+    const hasSecurity = this.cartItems.some(item => item.product.category === ProductCategory.SECURITY);
 
     if (hasVpn && hasSecurity && !this.discounts.some(d => d.id === 'vpn-security-bundle')) {
       const bundleDiscount: CartDiscount = {
@@ -1093,8 +1113,8 @@ export class CartService extends EventEmitter {
     const averageItemPrice = totalValue / this.getItemCount();
 
     const sortedByPrice = [...this.cartItems].sort((a, b) => a.product.price - b.product.price);
-    const mostExpensiveItem = sortedByPrice[sortedByPrice.length - 1];
-    const leastExpensiveItem = sortedByPrice[0];
+    const mostExpensiveItem = sortedByPrice[sortedByPrice.length - 1] || null;
+    const leastExpensiveItem = sortedByPrice[0] || null;
 
     const categoryBreakdown: Record<string, { count: number; value: number }> = {};
     for (const item of this.cartItems) {
@@ -1128,7 +1148,7 @@ export class CartService extends EventEmitter {
     if (enabled) {
       this.scheduleRecalculation();
     } else if (this.recalculateTimer) {
-      clearTimeout(this.recalculateTimer);
+      window.clearTimeout(this.recalculateTimer);
     }
   }
 
@@ -1191,7 +1211,7 @@ export class CartService extends EventEmitter {
    */
   destroy(): void {
     if (this.recalculateTimer) {
-      clearTimeout(this.recalculateTimer);
+      window.clearTimeout(this.recalculateTimer);
     }
     this.removeAllListeners();
     this.listeners = [];

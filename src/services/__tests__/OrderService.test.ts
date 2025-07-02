@@ -9,8 +9,8 @@ import type { CreateOrderRequest, Order } from '../../types';
 // Mock dependencies
 jest.mock('../product/ProductService', () => ({
   productService: {
-    getProduct: jest.fn()
-  }
+    getProduct: jest.fn(),
+  },
 }));
 
 import { productService } from '../product/ProductService';
@@ -29,28 +29,28 @@ describe('OrderService', () => {
           data: {
             id: 'product_1',
             name: 'Test Product 1',
-            price: 50.00,
-            category: 'test'
-          }
+            price: 50.0,
+            category: 'test',
+          },
         })
         .mockResolvedValueOnce({
           success: true,
           data: {
             id: 'product_2',
             name: 'Test Product 2',
-            price: 30.00,
-            category: 'test'
-          }
+            price: 30.0,
+            category: 'test',
+          },
         });
 
       const orderRequest: CreateOrderRequest = {
         userId: 'user_123',
         items: [
-          { productId: 'product_1', quantity: 2, price: 50.00 },
-          { productId: 'product_2', quantity: 1, price: 30.00 }
+          { productId: 'product_1', quantity: 2, price: 50.0 },
+          { productId: 'product_2', quantity: 1, price: 30.0 },
         ],
         paymentMethod: PaymentMethod.CURLEC,
-        currency: 'MYR'
+        currency: 'MYR',
       };
 
       const result = await orderService.createOrder(orderRequest);
@@ -58,30 +58,28 @@ describe('OrderService', () => {
       expect(result.id).toBeDefined();
       expect(result.userId).toBe('user_123');
       expect(result.items).toHaveLength(2);
-      expect(result.totalAmount).toBe(130.00); // (50*2) + (30*1)
+      expect(result.totalAmount).toBe(130.0); // (50*2) + (30*1)
       expect(result.status).toBe(OrderStatus.PENDING);
       expect(result.currency).toBe('MYR');
       expect(result.paymentMethod).toBe('CURLEC');
     });
 
     it('should handle missing products gracefully', async () => {
-      (productService.getProduct as jest.Mock)
-        .mockResolvedValueOnce({
-          success: false,
-          error: 'Product not found'
-        });
+      (productService.getProduct as jest.Mock).mockResolvedValueOnce({
+        success: false,
+        error: 'Product not found',
+      });
 
       const orderRequest: CreateOrderRequest = {
         userId: 'user_123',
-        items: [
-          { productId: 'invalid_product', quantity: 1, price: 50.00 }
-        ],
+        items: [{ productId: 'invalid_product', quantity: 1, price: 50.0 }],
         paymentMethod: PaymentMethod.CURLEC,
-        currency: 'MYR'
+        currency: 'MYR',
       };
 
-      await expect(orderService.createOrder(orderRequest))
-        .rejects.toThrow('Product invalid_product not found');
+      await expect(orderService.createOrder(orderRequest)).rejects.toThrow(
+        'Product invalid_product not found'
+      );
     });
 
     it('should validate order request', async () => {
@@ -89,32 +87,28 @@ describe('OrderService', () => {
         userId: '',
         items: [],
         paymentMethod: PaymentMethod.CURLEC,
-        currency: 'MYR'
+        currency: 'MYR',
       };
 
-      await expect(orderService.createOrder(invalidRequest))
-        .rejects.toThrow('User ID is required');
+      await expect(orderService.createOrder(invalidRequest)).rejects.toThrow('User ID is required');
     });
 
     it('should calculate total amount correctly', async () => {
-      (productService.getProduct as jest.Mock)
-        .mockResolvedValue({
-          success: true,
-          data: {
-            id: 'product_1',
-            name: 'Test Product',
-            price: 25.99,
-            category: 'test'
-          }
-        });
+      (productService.getProduct as jest.Mock).mockResolvedValue({
+        success: true,
+        data: {
+          id: 'product_1',
+          name: 'Test Product',
+          price: 25.99,
+          category: 'test',
+        },
+      });
 
       const orderRequest: CreateOrderRequest = {
         userId: 'user_123',
-        items: [
-          { productId: 'product_1', quantity: 3, price: 25.99 }
-        ],
+        items: [{ productId: 'product_1', quantity: 3, price: 25.99 }],
         paymentMethod: PaymentMethod.CURLEC,
-        currency: 'MYR'
+        currency: 'MYR',
       };
 
       const result = await orderService.createOrder(orderRequest);
@@ -126,28 +120,25 @@ describe('OrderService', () => {
   describe('getOrder', () => {
     it('should retrieve existing order', async () => {
       // First create an order
-      (productService.getProduct as jest.Mock)
-        .mockResolvedValue({
-          success: true,
-          data: {
-            id: 'product_1',
-            name: 'Test Product',
-            price: 50.00,
-            category: 'test'
-          }
-        });
+      (productService.getProduct as jest.Mock).mockResolvedValue({
+        success: true,
+        data: {
+          id: 'product_1',
+          name: 'Test Product',
+          price: 50.0,
+          category: 'test',
+        },
+      });
 
       const orderRequest: CreateOrderRequest = {
         userId: 'user_123',
-        items: [
-          { productId: 'product_1', quantity: 1, price: 50.00 }
-        ],
+        items: [{ productId: 'product_1', quantity: 1, price: 50.0 }],
         paymentMethod: PaymentMethod.CURLEC,
-        currency: 'MYR'
+        currency: 'MYR',
       };
 
       const createdOrder = await orderService.createOrder(orderRequest);
-      
+
       // Then retrieve it
       const retrievedOrder = await orderService.getOrder(createdOrder.id);
 
@@ -155,41 +146,34 @@ describe('OrderService', () => {
     });
 
     it('should throw error for non-existent order', async () => {
-      await expect(orderService.getOrder('invalid_order_id'))
-        .rejects.toThrow('Order not found');
+      await expect(orderService.getOrder('invalid_order_id')).rejects.toThrow('Order not found');
     });
   });
 
   describe('updateOrderStatus', () => {
     it('should update order status successfully', async () => {
       // First create an order
-      (productService.getProduct as jest.Mock)
-        .mockResolvedValue({
-          success: true,
-          data: {
-            id: 'product_1',
-            name: 'Test Product',
-            price: 50.00,
-            category: 'test'
-          }
-        });
+      (productService.getProduct as jest.Mock).mockResolvedValue({
+        success: true,
+        data: {
+          id: 'product_1',
+          name: 'Test Product',
+          price: 50.0,
+          category: 'test',
+        },
+      });
 
       const orderRequest: CreateOrderRequest = {
         userId: 'user_123',
-        items: [
-          { productId: 'product_1', quantity: 1, price: 50.00 }
-        ],
+        items: [{ productId: 'product_1', quantity: 1, price: 50.0 }],
         paymentMethod: PaymentMethod.CURLEC,
-        currency: 'MYR'
+        currency: 'MYR',
       };
 
       const order = await orderService.createOrder(orderRequest);
-      
+
       // Update status
-      const updatedOrder = await orderService.updateOrderStatus(
-        order.id, 
-        OrderStatus.CONFIRMED
-      );
+      const updatedOrder = await orderService.updateOrderStatus(order.id, OrderStatus.CONFIRMED);
 
       expect(updatedOrder.status).toBe(OrderStatus.CONFIRMED);
       expect(updatedOrder.updatedAt).toBeDefined();
@@ -206,11 +190,9 @@ describe('OrderService', () => {
     it('should validate correct order request', () => {
       const validRequest: CreateOrderRequest = {
         userId: 'user_123',
-        items: [
-          { productId: 'product_1', quantity: 1, price: 50.00 }
-        ],
+        items: [{ productId: 'product_1', quantity: 1, price: 50.0 }],
         paymentMethod: PaymentMethod.CURLEC,
-        currency: 'MYR'
+        currency: 'MYR',
       };
 
       expect(() => {
@@ -221,11 +203,9 @@ describe('OrderService', () => {
     it('should reject empty user ID', () => {
       const invalidRequest: CreateOrderRequest = {
         userId: '',
-        items: [
-          { productId: 'product_1', quantity: 1, price: 50.00 }
-        ],
+        items: [{ productId: 'product_1', quantity: 1, price: 50.0 }],
         paymentMethod: PaymentMethod.CURLEC,
-        currency: 'MYR'
+        currency: 'MYR',
       };
 
       expect(() => {
@@ -238,7 +218,7 @@ describe('OrderService', () => {
         userId: 'user_123',
         items: [],
         paymentMethod: PaymentMethod.CURLEC,
-        currency: 'MYR'
+        currency: 'MYR',
       };
 
       expect(() => {
@@ -249,11 +229,9 @@ describe('OrderService', () => {
     it('should reject invalid quantities', () => {
       const invalidRequest: CreateOrderRequest = {
         userId: 'user_123',
-        items: [
-          { productId: 'product_1', quantity: 0, price: 50.00 }
-        ],
+        items: [{ productId: 'product_1', quantity: 0, price: 50.0 }],
         paymentMethod: PaymentMethod.CURLEC,
-        currency: 'MYR'
+        currency: 'MYR',
       };
 
       expect(() => {

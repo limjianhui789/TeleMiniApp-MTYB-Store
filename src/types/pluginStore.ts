@@ -2,7 +2,8 @@
 // MTYB Virtual Goods Platform - Plugin Store Types
 // ============================================================================
 
-import { PluginConfig, ProductCategory } from './index';
+import type { PluginConfig } from './index';
+import { ProductCategory } from './index';
 
 // ============================================================================
 // Plugin Store Types

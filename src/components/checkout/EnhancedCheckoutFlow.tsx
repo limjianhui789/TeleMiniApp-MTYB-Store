@@ -110,11 +110,11 @@ export const EnhancedCheckoutFlow: React.FC<CheckoutFlowProps> = ({
 
   const handleProceedToPayment = async () => {
     triggerHaptic('medium');
-    setState(prev => ({ 
-      ...prev, 
-      step: 'processing', 
+    setState(prev => ({
+      ...prev,
+      step: 'processing',
       isCreatingOrder: true,
-      processingStep: 'creating_order'
+      processingStep: 'creating_order',
     }));
 
     try {
@@ -130,12 +130,12 @@ export const EnhancedCheckoutFlow: React.FC<CheckoutFlowProps> = ({
         currency: state.currency,
       });
 
-      setState(prev => ({ 
-        ...prev, 
+      setState(prev => ({
+        ...prev,
         orderId: order.id,
         step: 'payment',
         isCreatingOrder: false,
-        processingStep: undefined
+        processingStep: undefined,
       }));
     } catch (error) {
       setState(prev => ({
@@ -147,8 +147,6 @@ export const EnhancedCheckoutFlow: React.FC<CheckoutFlowProps> = ({
       }));
     }
   };
-
-
 
   const handleBack = () => {
     triggerHaptic('light');
@@ -163,12 +161,12 @@ export const EnhancedCheckoutFlow: React.FC<CheckoutFlowProps> = ({
 
   if (state.step === 'success') {
     return (
-      <CheckoutSuccess 
+      <CheckoutSuccess
         orderId={state.orderId}
         paymentId={state.paymentId}
         amount={state.totalAmount}
         currency={state.currency}
-        onContinue={() => onBack?.()} 
+        onContinue={() => onBack?.()}
       />
     );
   }
@@ -234,19 +232,21 @@ export const EnhancedCheckoutFlow: React.FC<CheckoutFlowProps> = ({
             onRetry={() => setState(prev => ({ ...prev, error: undefined }))}
             onCancel={() => setState(prev => ({ ...prev, step: 'review' }))}
           >
-            <Suspense fallback={
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
-                <LoadingSpinner size="lg" />
-              </div>
-            }>
+            <Suspense
+              fallback={
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+                  <LoadingSpinner size="lg" />
+                </div>
+              }
+            >
               <PaymentForm
                 orderId={state.orderId}
                 amount={state.totalAmount}
                 currency={state.currency}
-                onSuccess={(paymentId) => {
+                onSuccess={paymentId => {
                   setState(prev => ({ ...prev, paymentId, step: 'success' }));
                 }}
-                onError={(error) => {
+                onError={error => {
                   setState(prev => ({ ...prev, error, step: 'error' }));
                 }}
                 onCancel={() => {
@@ -258,8 +258,8 @@ export const EnhancedCheckoutFlow: React.FC<CheckoutFlowProps> = ({
         )}
 
         {state.step === 'processing' && (
-          <ProcessingStep 
-            amount={state.totalAmount} 
+          <ProcessingStep
+            amount={state.totalAmount}
             currency={state.currency}
             currentStep={state.processingStep}
             isCreatingOrder={state.isCreatingOrder}
@@ -506,7 +506,6 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ items, totalAmount, currency, o
   );
 };
 
-
 // ============================================================================
 // Processing Step
 // ============================================================================
@@ -518,11 +517,11 @@ interface ProcessingStepProps {
   isCreatingOrder?: boolean;
 }
 
-const ProcessingStep: React.FC<ProcessingStepProps> = ({ 
-  amount, 
-  currency, 
+const ProcessingStep: React.FC<ProcessingStepProps> = ({
+  amount,
+  currency,
   currentStep,
-  isCreatingOrder 
+  isCreatingOrder,
 }) => {
   const getStepText = () => {
     switch (currentStep) {
@@ -557,42 +556,59 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({
           <LoadingSpinner size="lg" />
         </div>
         <h3 className="processing-step__title">{getStepText()}</h3>
-        <p className="processing-step__description">
-          {getStepDescription()}
-        </p>
-        <div className="processing-step__steps" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '2rem' }}>
-          <div 
+        <p className="processing-step__description">{getStepDescription()}</p>
+        <div
+          className="processing-step__steps"
+          style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '2rem' }}
+        >
+          <div
             className={`processing-step__step ${
-              currentStep === 'creating_order' || !currentStep ? 'processing-step__step--active' : 'processing-step__step--completed'
+              currentStep === 'creating_order' || !currentStep
+                ? 'processing-step__step--active'
+                : 'processing-step__step--completed'
             }`}
             style={{
               display: 'flex',
               alignItems: 'center',
               fontSize: '0.875rem',
-              color: currentStep === 'creating_order' || !currentStep ? 'var(--accent-color, #3b82f6)' : 'var(--success-color, #10b981)',
-              fontWeight: currentStep === 'creating_order' || !currentStep ? 'bold' : 'normal'
+              color:
+                currentStep === 'creating_order' || !currentStep
+                  ? 'var(--accent-color, #3b82f6)'
+                  : 'var(--success-color, #10b981)',
+              fontWeight: currentStep === 'creating_order' || !currentStep ? 'bold' : 'normal',
             }}
           >
             {currentStep === 'creating_order' || !currentStep ? '⏳' : '✅'} Creating order
           </div>
-          <div 
+          <div
             className={`processing-step__step ${
-              currentStep === 'processing_payment' ? 'processing-step__step--active' : 
-              currentStep === 'finalizing' ? 'processing-step__step--completed' : ''
+              currentStep === 'processing_payment'
+                ? 'processing-step__step--active'
+                : currentStep === 'finalizing'
+                  ? 'processing-step__step--completed'
+                  : ''
             }`}
             style={{
               display: 'flex',
               alignItems: 'center',
               fontSize: '0.875rem',
-              color: currentStep === 'processing_payment' ? 'var(--accent-color, #3b82f6)' : 
-                     currentStep === 'finalizing' ? 'var(--success-color, #10b981)' : 'var(--text-secondary, #6b7280)',
-              fontWeight: currentStep === 'processing_payment' ? 'bold' : 'normal'
+              color:
+                currentStep === 'processing_payment'
+                  ? 'var(--accent-color, #3b82f6)'
+                  : currentStep === 'finalizing'
+                    ? 'var(--success-color, #10b981)'
+                    : 'var(--text-secondary, #6b7280)',
+              fontWeight: currentStep === 'processing_payment' ? 'bold' : 'normal',
             }}
           >
-            {currentStep === 'processing_payment' ? '⏳' : 
-             currentStep === 'finalizing' ? '✅' : '💳'} Processing payment
+            {currentStep === 'processing_payment'
+              ? '⏳'
+              : currentStep === 'finalizing'
+                ? '✅'
+                : '💳'}{' '}
+            Processing payment
           </div>
-          <div 
+          <div
             className={`processing-step__step ${
               currentStep === 'finalizing' ? 'processing-step__step--active' : ''
             }`}
@@ -600,8 +616,11 @@ const ProcessingStep: React.FC<ProcessingStepProps> = ({
               display: 'flex',
               alignItems: 'center',
               fontSize: '0.875rem',
-              color: currentStep === 'finalizing' ? 'var(--accent-color, #3b82f6)' : 'var(--text-secondary, #6b7280)',
-              fontWeight: currentStep === 'finalizing' ? 'bold' : 'normal'
+              color:
+                currentStep === 'finalizing'
+                  ? 'var(--accent-color, #3b82f6)'
+                  : 'var(--text-secondary, #6b7280)',
+              fontWeight: currentStep === 'finalizing' ? 'bold' : 'normal',
             }}
           >
             {currentStep === 'finalizing' ? '⏳' : '📦'} Finalizing order
@@ -624,12 +643,12 @@ interface CheckoutSuccessProps {
   onContinue: () => void;
 }
 
-const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({ 
-  orderId, 
-  paymentId, 
-  amount, 
-  currency, 
-  onContinue 
+const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
+  orderId,
+  paymentId,
+  amount,
+  currency,
+  onContinue,
 }) => {
   return (
     <div className="checkout-success">
@@ -639,7 +658,7 @@ const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
         <p className="checkout-success__description">
           Your payment of {currency} {amount.toFixed(2)} has been processed successfully.
         </p>
-        
+
         {orderId && (
           <div className="checkout-success__details">
             <div className="detail-item">
@@ -654,12 +673,12 @@ const CheckoutSuccess: React.FC<CheckoutSuccessProps> = ({
             )}
           </div>
         )}
-        
+
         <div className="checkout-success__actions">
           <Button
             variant="primary"
             size="lg"
-            onClick={() => window.location.href = `/orders/${orderId}`}
+            onClick={() => (window.location.href = `/orders/${orderId}`)}
             className="checkout-success__order-btn"
           >
             View Order Details

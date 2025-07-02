@@ -16,23 +16,25 @@ export const PaymentCancelPage: React.FC = () => {
             <p style={{ color: 'var(--text-secondary, #6b7280)', margin: '1rem 0 2rem 0' }}>
               Your payment was cancelled. No charges were made to your account.
             </p>
-            
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Button
-                variant="primary"
-                onClick={() => navigate('/cart')}
-              >
+
+            <div
+              style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}
+            >
+              <Button variant="primary" onClick={() => navigate('/cart')}>
                 Return to Cart
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/products')}
-              >
+              <Button variant="outline" onClick={() => navigate('/products')}>
                 Continue Shopping
               </Button>
             </div>
-            
-            <div style={{ marginTop: '2rem', fontSize: '0.875rem', color: 'var(--text-secondary, #6b7280)' }}>
+
+            <div
+              style={{
+                marginTop: '2rem',
+                fontSize: '0.875rem',
+                color: 'var(--text-secondary, #6b7280)',
+              }}
+            >
               <p>Need help? Contact our support team for assistance.</p>
             </div>
           </div>

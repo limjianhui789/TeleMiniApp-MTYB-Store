@@ -2,7 +2,7 @@
 // MTYB Virtual Goods Platform - Product Tag Management Service
 // ============================================================================
 
-import { ApiResponse } from '../../types';
+import type { ApiResponse } from '../../types';
 import { Logger } from '../../core/utils/Logger';
 
 // ============================================================================
@@ -449,10 +449,23 @@ export class TagService {
         };
       }
 
+      const existingTag = this.tags[tagIndex];
+      if (!existingTag) {
+        return {
+          success: false,
+          error: {
+            code: 'TAG_NOT_FOUND',
+            message: 'Tag not found',
+          },
+        };
+      }
+
       const updatedTag: ProductTag = {
-        ...this.tags[tagIndex],
+        ...existingTag,
         ...updates,
         id, // Preserve original ID
+        name: updates.name || existingTag.name, // Ensure name is always defined
+        createdAt: existingTag.createdAt, // Preserve creation date
         updatedAt: new Date(),
       };
 
@@ -491,6 +504,15 @@ export class TagService {
       }
 
       const tag = this.tags[tagIndex];
+      if (!tag) {
+        return {
+          success: false,
+          error: {
+            code: 'TAG_NOT_FOUND',
+            message: 'Tag not found',
+          },
+        };
+      }
 
       // Prevent deletion of system tags
       if (tag.isSystem) {

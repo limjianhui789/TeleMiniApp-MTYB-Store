@@ -33,31 +33,53 @@ export class PaymentErrorBoundary extends Component<Props, State> {
 
   static categorizeError(error: Error): State['errorType'] {
     const message = error.message.toLowerCase();
-    
-    if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
+
+    if (
+      message.includes('network') ||
+      message.includes('fetch') ||
+      message.includes('connection')
+    ) {
       return 'network';
     }
-    
-    if (message.includes('payment') || message.includes('transaction') || message.includes('gateway') || message.includes('declined')) {
+
+    if (
+      message.includes('payment') ||
+      message.includes('transaction') ||
+      message.includes('gateway') ||
+      message.includes('declined')
+    ) {
       return 'payment';
     }
-    
-    if (message.includes('validation') || message.includes('invalid') || message.includes('required')) {
+
+    if (
+      message.includes('validation') ||
+      message.includes('invalid') ||
+      message.includes('required')
+    ) {
       return 'validation';
     }
-    
-    if (message.includes('order') || message.includes('expired') || message.includes('stock') || message.includes('inventory')) {
+
+    if (
+      message.includes('order') ||
+      message.includes('expired') ||
+      message.includes('stock') ||
+      message.includes('inventory')
+    ) {
       return 'order';
     }
-    
-    if (message.includes('auth') || message.includes('unauthorized') || message.includes('permission')) {
+
+    if (
+      message.includes('auth') ||
+      message.includes('unauthorized') ||
+      message.includes('permission')
+    ) {
       return 'auth';
     }
-    
+
     if (message.includes('timeout') || message.includes('time out') || message.includes('slow')) {
       return 'timeout';
     }
-    
+
     return 'unknown';
   }
 
@@ -78,7 +100,7 @@ export class PaymentErrorBoundary extends Component<Props, State> {
       errorInfo: undefined,
       errorType: undefined,
     });
-    
+
     if (this.props.onRetry) {
       this.props.onRetry();
     }
@@ -86,24 +108,27 @@ export class PaymentErrorBoundary extends Component<Props, State> {
 
   getErrorDetails() {
     const { error, errorType } = this.state;
-    
+
     switch (errorType) {
       case 'network':
         return {
           icon: '🌐',
           title: 'Network Error',
-          message: 'Unable to connect to payment services. Please check your internet connection and try again.',
+          message:
+            'Unable to connect to payment services. Please check your internet connection and try again.',
           suggestion: 'Check your internet connection and try again.',
         };
-      
+
       case 'payment':
         return {
           icon: '💳',
           title: 'Payment Error',
-          message: error?.message || 'There was an issue processing your payment. Please try again or use a different payment method.',
+          message:
+            error?.message ||
+            'There was an issue processing your payment. Please try again or use a different payment method.',
           suggestion: 'Try again or contact support if the problem persists.',
         };
-      
+
       case 'validation':
         return {
           icon: '⚠️',
@@ -111,15 +136,17 @@ export class PaymentErrorBoundary extends Component<Props, State> {
           message: error?.message || 'Please check your payment information and try again.',
           suggestion: 'Verify your payment details and try again.',
         };
-      
+
       case 'order':
         return {
           icon: '📦',
           title: 'Order Issue',
-          message: error?.message || 'There was an issue with your order. It may have expired or items may be out of stock.',
+          message:
+            error?.message ||
+            'There was an issue with your order. It may have expired or items may be out of stock.',
           suggestion: 'Please check your cart and try placing the order again.',
         };
-      
+
       case 'auth':
         return {
           icon: '🔐',
@@ -127,7 +154,7 @@ export class PaymentErrorBoundary extends Component<Props, State> {
           message: error?.message || 'Authentication failed. Please log in again.',
           suggestion: 'Please refresh the page and try again.',
         };
-      
+
       case 'timeout':
         return {
           icon: '⏱️',
@@ -135,7 +162,7 @@ export class PaymentErrorBoundary extends Component<Props, State> {
           message: error?.message || 'The payment request took too long to process.',
           suggestion: 'Please check your internet connection and try again.',
         };
-      
+
       default:
         return {
           icon: '❌',
@@ -157,73 +184,75 @@ export class PaymentErrorBoundary extends Component<Props, State> {
       return (
         <Card className="payment-error-boundary">
           <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>
-              {errorDetails.icon}
-            </div>
-            
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{errorDetails.icon}</div>
+
             <h2 style={{ margin: '0 0 1rem 0', color: 'var(--error-color, #ef4444)' }}>
               {errorDetails.title}
             </h2>
-            
-            <p style={{ 
-              color: 'var(--text-secondary, #6b7280)', 
-              margin: '0 0 1rem 0',
-              lineHeight: 1.6
-            }}>
+
+            <p
+              style={{
+                color: 'var(--text-secondary, #6b7280)',
+                margin: '0 0 1rem 0',
+                lineHeight: 1.6,
+              }}
+            >
               {errorDetails.message}
             </p>
-            
-            <div style={{ 
-              background: 'var(--bg-secondary, #f9fafb)', 
-              padding: '1rem',
-              borderRadius: '0.5rem',
-              margin: '1rem 0 2rem 0',
-              fontSize: '0.875rem'
-            }}>
+
+            <div
+              style={{
+                background: 'var(--bg-secondary, #f9fafb)',
+                padding: '1rem',
+                borderRadius: '0.5rem',
+                margin: '1rem 0 2rem 0',
+                fontSize: '0.875rem',
+              }}
+            >
               💡 <strong>Suggestion:</strong> {errorDetails.suggestion}
             </div>
 
             {/* Development mode - show technical details */}
             {import.meta.env.DEV && this.state.error && (
               <details style={{ marginBottom: '2rem', textAlign: 'left' }}>
-                <summary style={{ 
-                  cursor: 'pointer', 
-                  fontSize: '0.875rem',
-                  color: 'var(--text-secondary, #6b7280)'
-                }}>
+                <summary
+                  style={{
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    color: 'var(--text-secondary, #6b7280)',
+                  }}
+                >
                   Technical Details (Development)
                 </summary>
-                <pre style={{
-                  fontSize: '0.75rem',
-                  overflow: 'auto',
-                  marginTop: '0.5rem',
-                  padding: '1rem',
-                  backgroundColor: 'var(--bg-tertiary, #f3f4f6)',
-                  borderRadius: '0.25rem',
-                  maxHeight: '200px'
-                }}>
+                <pre
+                  style={{
+                    fontSize: '0.75rem',
+                    overflow: 'auto',
+                    marginTop: '0.5rem',
+                    padding: '1rem',
+                    backgroundColor: 'var(--bg-tertiary, #f3f4f6)',
+                    borderRadius: '0.25rem',
+                    maxHeight: '200px',
+                  }}
+                >
                   {this.state.error.stack}
                 </pre>
               </details>
             )}
 
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Button
-                variant="primary"
-                onClick={this.handleRetry}
-              >
+            <div
+              style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}
+            >
+              <Button variant="primary" onClick={this.handleRetry}>
                 Try Again
               </Button>
-              
+
               {this.props.onCancel && (
-                <Button
-                  variant="outline"
-                  onClick={this.props.onCancel}
-                >
+                <Button variant="outline" onClick={this.props.onCancel}>
                   Cancel Payment
                 </Button>
               )}
-              
+
               <Button
                 variant="ghost"
                 onClick={() => {
@@ -239,7 +268,6 @@ export class PaymentErrorBoundary extends Component<Props, State> {
               </Button>
             </div>
           </div>
-
         </Card>
       );
     }
@@ -252,10 +280,10 @@ export class PaymentErrorBoundary extends Component<Props, State> {
 export const usePaymentErrorHandler = () => {
   const handlePaymentError = (error: Error, context?: Record<string, any>) => {
     logger.error('Payment error handled by hook', error, context);
-    
+
     // You could integrate with error reporting services here
     // e.g., Sentry, Bugsnag, etc.
-    
+
     // For now, just log to console in development
     if (import.meta.env.DEV) {
       console.group('🚨 Payment Error Details');

@@ -14,11 +14,11 @@ export const PaymentSuccessPage: React.FC = () => {
     // Get payment ID and order ID from URL params
     const paymentIdParam = searchParams.get('payment_id');
     const orderIdParam = searchParams.get('order_id');
-    
+
     if (paymentIdParam) {
       setPaymentId(paymentIdParam);
     }
-    
+
     if (orderIdParam) {
       setOrderId(orderIdParam);
     }
@@ -37,9 +37,7 @@ export const PaymentSuccessPage: React.FC = () => {
         <div style={{ textAlign: 'center', padding: '2rem' }}>
           <h2>⚠️ Invalid Access</h2>
           <p>No payment information found. Redirecting to products...</p>
-          <Button onClick={() => navigate('/products')}>
-            Go to Products Now
-          </Button>
+          <Button onClick={() => navigate('/products')}>Go to Products Now</Button>
         </div>
       </Card>
     );
@@ -75,17 +73,18 @@ export const PaymentSuccessPage: React.FC = () => {
                   <strong>Order ID: {orderId}</strong>
                 </div>
               )}
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
-                <Button
-                  variant="primary"
-                  onClick={() => navigate(`/orders/${orderId}`)}
-                >
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '1rem',
+                  justifyContent: 'center',
+                  marginTop: '2rem',
+                }}
+              >
+                <Button variant="primary" onClick={() => navigate(`/orders/${orderId}`)}>
                   View Order Details
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/products')}
-                >
+                <Button variant="outline" onClick={() => navigate('/products')}>
                   Continue Shopping
                 </Button>
               </div>

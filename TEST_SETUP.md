@@ -1,15 +1,18 @@
 # 测试环境设置指南
 
 ## 概述
+
 本项目已创建了完整的单元测试套件，覆盖了以下核心模块：
 
 ### 已测试的服务模块
+
 - **PaymentService**: 支付创建、状态查询、验证逻辑
-- **OrderService**: 订单创建、状态更新、验证逻辑  
+- **OrderService**: 订单创建、状态更新、验证逻辑
 - **CartService**: 购物车操作、计算逻辑、本地存储
 - **CSRFToken**: 安全令牌生成、验证、防护机制
 
 ### 已测试的组件
+
 - **PaymentForm**: 支付表单验证、提交逻辑、错误处理
 
 ## 测试框架安装
@@ -23,12 +26,14 @@ npm install --save-dev @testing-library/react @testing-library/jest-dom @testing
 ## 测试配置文件
 
 ### jest.config.js
+
 - 配置了TypeScript支持
 - 设置了模块路径映射
 - 配置了覆盖率要求（70%）
 - 设置了jsdom测试环境
 
 ### setupTests.ts
+
 - Mock了Telegram WebApp API
 - Mock了localStorage和sessionStorage
 - Mock了fetch和crypto API
@@ -52,13 +57,15 @@ npm install --save-dev @testing-library/react @testing-library/jest-dom @testing
 ## 测试覆盖范围
 
 ### PaymentService.test.ts
+
 - ✅ 支付创建成功场景
 - ✅ 支付创建失败处理
 - ✅ 网络错误处理
 - ✅ 支付状态查询
 - ✅ 输入验证（邮箱、金额）
 
-### OrderService.test.ts  
+### OrderService.test.ts
+
 - ✅ 订单创建流程
 - ✅ 产品验证集成
 - ✅ 金额计算正确性
@@ -66,6 +73,7 @@ npm install --save-dev @testing-library/react @testing-library/jest-dom @testing
 - ✅ 输入验证（用户ID、商品数量）
 
 ### CartService.test.ts
+
 - ✅ 购物车商品添加/移除
 - ✅ 数量更新逻辑
 - ✅ 库存验证
@@ -73,6 +81,7 @@ npm install --save-dev @testing-library/react @testing-library/jest-dom @testing
 - ✅ 本地存储操作
 
 ### CSRFToken.test.ts
+
 - ✅ 令牌生成和验证
 - ✅ 会话存储管理
 - ✅ 受保护请求拦截
@@ -80,6 +89,7 @@ npm install --save-dev @testing-library/react @testing-library/jest-dom @testing
 - ✅ 令牌刷新机制
 
 ### PaymentForm.test.tsx
+
 - ✅ 表单渲染和验证
 - ✅ 用户输入处理
 - ✅ 加载状态显示
@@ -99,18 +109,21 @@ Coverage:    Lines 70%+, Functions 70%+, Branches 70%+
 ## 关键测试场景
 
 ### 支付流程测试
+
 1. 正常支付创建和处理
 2. 验证错误（无效邮箱、电话）
 3. 网络错误恢复
 4. 重定向处理
 
 ### 订单管理测试
+
 1. 多商品订单创建
 2. 库存不足处理
 3. 价格计算准确性
 4. 状态转换逻辑
 
 ### 安全性测试
+
 1. CSRF令牌保护
 2. 输入验证
 3. 会话管理
