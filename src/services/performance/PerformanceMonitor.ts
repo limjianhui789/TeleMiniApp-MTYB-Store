@@ -52,7 +52,7 @@ export class PerformanceMonitor {
   };
 
   private observers: PerformanceObserver[] = [];
-  private intervalId?: NodeJS.Timeout;
+  private intervalId?: number;
 
   constructor() {
     this.setupPerformanceObservers();
@@ -200,7 +200,7 @@ export class PerformanceMonitor {
   private setupPerformanceObservers(): void {
     // HTTP request observer
     if (PerformanceObserver.supportedEntryTypes.includes('measure')) {
-      const httpObserver = new PerformanceObserver(list => {
+      const httpObserver = new PerformanceObserver((list: PerformanceObserverEntryList) => {
         for (const entry of list.getEntries()) {
           if (entry.name.startsWith('http-request')) {
             this.analyzeHttpTiming(entry);
@@ -214,7 +214,7 @@ export class PerformanceMonitor {
 
     // GC observer
     if (PerformanceObserver.supportedEntryTypes.includes('gc')) {
-      const gcObserver = new PerformanceObserver(list => {
+      const gcObserver = new PerformanceObserver((list: PerformanceObserverEntryList) => {
         for (const entry of list.getEntries()) {
           this.analyzeGcTiming(entry);
         }

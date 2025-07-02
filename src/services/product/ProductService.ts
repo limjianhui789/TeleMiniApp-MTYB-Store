@@ -214,8 +214,10 @@ export class ProductService {
       if (!product) {
         return {
           success: false,
-          error: `Product not found: ${id}`,
-          data: null,
+          error: {
+            code: 'PRODUCT_NOT_FOUND',
+            message: `Product not found: ${id}`,
+          },
         };
       }
 
@@ -226,8 +228,10 @@ export class ProductService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to get product',
-        data: null,
+        error: {
+          code: 'PRODUCT_FETCH_ERROR',
+          message: error instanceof Error ? error.message : 'Failed to get product',
+        },
       };
     }
   }
@@ -773,6 +777,10 @@ export class ProductService {
         }
 
         const product = this.products[productIndex];
+        if (!product) {
+          errors.push({ id: update.id, message: 'Product not found' });
+          continue;
+        }
         if (!product.stock) {
           errors.push({ id: update.id, message: 'Product has no stock configuration' });
           continue;

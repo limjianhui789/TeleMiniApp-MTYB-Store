@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { ComponentType } from 'react';
+import type { ComponentType } from 'react';
 
 // Code splitting utilities
 export const createLazyComponent = <T extends ComponentType<any>>(

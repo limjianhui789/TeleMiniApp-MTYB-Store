@@ -3,7 +3,7 @@
  * 提供插件商店的核心API功能
  */
 
-import {
+import type {
   PluginStoreItem,
   PluginSearchQuery,
   PluginSearchResult,
@@ -12,6 +12,8 @@ import {
   PluginSubmission,
   PluginDeveloperStats,
   PluginStoreAPI,
+} from '../../types/pluginStore';
+import {
   PluginStoreStatus,
   PluginSortBy,
   PluginInstallationStatus,
@@ -279,9 +281,9 @@ export class PluginStoreService implements PluginStoreAPI {
       authorId: 'current-user', // 实际应该从认证系统获取
       fileName: pluginPackage.name,
       fileSize: pluginPackage.size,
-      status: 'pending',
+      status: PluginStoreStatus.PENDING,
       submittedAt: new Date(),
-      reviewNotes: [],
+      reviewNotes: '',
     };
 
     this.submissions.set(submissionId, submission);

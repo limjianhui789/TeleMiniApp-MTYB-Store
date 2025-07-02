@@ -136,7 +136,7 @@ export const useCriticalPreloader = () => {
 // Hook for intelligent resource preloading based on user behavior
 export const useIntelligentPreloader = () => {
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: number;
 
     const preloadOnIdle = () => {
       // Preload non-critical resources when the browser is idle
