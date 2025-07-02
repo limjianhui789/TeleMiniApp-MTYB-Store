@@ -8,8 +8,8 @@ import { CSRFToken } from '../CSRFToken';
 const mockGetRandomValues = jest.fn();
 Object.defineProperty(global, 'crypto', {
   value: {
-    getRandomValues: mockGetRandomValues
-  }
+    getRandomValues: mockGetRandomValues,
+  },
 });
 
 // Mock sessionStorage
@@ -17,11 +17,11 @@ const mockSessionStorage = {
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
-  clear: jest.fn()
+  clear: jest.fn(),
 };
 
 Object.defineProperty(window, 'sessionStorage', {
-  value: mockSessionStorage
+  value: mockSessionStorage,
 });
 
 // Mock fetch
@@ -37,7 +37,7 @@ describe('CSRFToken', () => {
   describe('generateToken', () => {
     it('should generate a new CSRF token', () => {
       // Mock crypto.getRandomValues to return predictable values
-      mockGetRandomValues.mockImplementation((array) => {
+      mockGetRandomValues.mockImplementation(array => {
         for (let i = 0; i < array.length; i++) {
           array[i] = i % 256;
         }
@@ -53,7 +53,7 @@ describe('CSRFToken', () => {
     });
 
     it('should generate different tokens on subsequent calls', () => {
-      mockGetRandomValues.mockImplementation((array) => {
+      mockGetRandomValues.mockImplementation(array => {
         for (let i = 0; i < array.length; i++) {
           array[i] = Math.floor(Math.random() * 256);
         }
@@ -80,7 +80,7 @@ describe('CSRFToken', () => {
 
     it('should generate new token if none exists', () => {
       mockSessionStorage.getItem.mockReturnValue(null);
-      mockGetRandomValues.mockImplementation((array) => {
+      mockGetRandomValues.mockImplementation(array => {
         for (let i = 0; i < array.length; i++) {
           array[i] = i % 256;
         }
@@ -135,68 +135,68 @@ describe('CSRFToken', () => {
     it('should add CSRF token to POST request headers', async () => {
       const mockToken = 'csrf-token-123';
       mockSessionStorage.getItem.mockReturnValue(mockToken);
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ success: true })
+        json: async () => ({ success: true }),
       });
 
       await CSRFToken.protectedFetch('/api/test', {
         method: 'POST',
-        body: JSON.stringify({ data: 'test' })
+        body: JSON.stringify({ data: 'test' }),
       });
 
       expect(mockFetch).toHaveBeenCalledWith('/api/test', {
         method: 'POST',
         body: JSON.stringify({ data: 'test' }),
         headers: {
-          'X-CSRF-Token': mockToken
-        }
+          'X-CSRF-Token': mockToken,
+        },
       });
     });
 
     it('should add CSRF token to PUT request headers', async () => {
       const mockToken = 'csrf-token-456';
       mockSessionStorage.getItem.mockReturnValue(mockToken);
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ success: true })
+        json: async () => ({ success: true }),
       });
 
       await CSRFToken.protectedFetch('/api/update', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: 1 })
+        body: JSON.stringify({ id: 1 }),
       });
 
       expect(mockFetch).toHaveBeenCalledWith('/api/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-Token': mockToken
+          'X-CSRF-Token': mockToken,
         },
-        body: JSON.stringify({ id: 1 })
+        body: JSON.stringify({ id: 1 }),
       });
     });
 
     it('should not add CSRF token to GET requests', async () => {
       const mockToken = 'csrf-token-789';
       mockSessionStorage.getItem.mockReturnValue(mockToken);
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ data: 'test' })
+        json: async () => ({ data: 'test' }),
       });
 
       await CSRFToken.protectedFetch('/api/data', {
-        method: 'GET'
+        method: 'GET',
       });
 
       expect(mockFetch).toHaveBeenCalledWith('/api/data', {
-        method: 'GET'
+        method: 'GET',
       });
 
       const callArgs = mockFetch.mock.calls[0][1];
@@ -205,21 +205,21 @@ describe('CSRFToken', () => {
 
     it('should generate token if none exists for protected requests', async () => {
       mockSessionStorage.getItem.mockReturnValue(null);
-      mockGetRandomValues.mockImplementation((array) => {
+      mockGetRandomValues.mockImplementation(array => {
         for (let i = 0; i < array.length; i++) {
           array[i] = i % 256;
         }
         return array;
       });
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
-        json: async () => ({ success: true })
+        json: async () => ({ success: true }),
       });
 
       await CSRFToken.protectedFetch('/api/test', {
         method: 'POST',
-        body: JSON.stringify({ data: 'test' })
+        body: JSON.stringify({ data: 'test' }),
       });
 
       expect(mockSessionStorage.setItem).toHaveBeenCalled();
@@ -227,8 +227,8 @@ describe('CSRFToken', () => {
         '/api/test',
         expect.objectContaining({
           headers: expect.objectContaining({
-            'X-CSRF-Token': expect.any(String)
-          })
+            'X-CSRF-Token': expect.any(String),
+          }),
         })
       );
     });
@@ -236,13 +236,13 @@ describe('CSRFToken', () => {
     it('should handle fetch errors gracefully', async () => {
       const mockToken = 'csrf-token-error';
       mockSessionStorage.getItem.mockReturnValue(mockToken);
-      
+
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       await expect(
         CSRFToken.protectedFetch('/api/error', {
           method: 'POST',
-          body: JSON.stringify({ data: 'test' })
+          body: JSON.stringify({ data: 'test' }),
         })
       ).rejects.toThrow('Network error');
     });
@@ -260,7 +260,7 @@ describe('CSRFToken', () => {
     it('should generate new token and replace existing one', () => {
       const oldToken = 'old-csrf-token';
       mockSessionStorage.getItem.mockReturnValue(oldToken);
-      mockGetRandomValues.mockImplementation((array) => {
+      mockGetRandomValues.mockImplementation(array => {
         for (let i = 0; i < array.length; i++) {
           array[i] = (i + 100) % 256;
         }

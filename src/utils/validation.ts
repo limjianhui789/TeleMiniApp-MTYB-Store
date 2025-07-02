@@ -146,7 +146,8 @@ export class Validator {
   uuid(field: string, message?: string): this {
     const value = this.data[field];
     if (value && typeof value === 'string') {
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(value)) {
         this.errors.push({
           field,
@@ -182,7 +183,7 @@ export class Validator {
   custom(field: string, validator: (value: any) => boolean | string): this {
     const value = this.data[field];
     const result = validator(value);
-    
+
     if (typeof result === 'string') {
       this.errors.push({
         field,
@@ -238,26 +239,26 @@ export const ValidationRules = {
    */
   creditCard: (value: string): boolean | string => {
     if (!value) return 'Credit card number is required';
-    
+
     const cleaned = value.replace(/\s/g, '');
     if (!/^\d{13,19}$/.test(cleaned)) return 'Invalid credit card format';
-    
+
     // Luhn algorithm
     let sum = 0;
     let alternate = false;
-    
+
     for (let i = cleaned.length - 1; i >= 0; i--) {
       let n = parseInt(cleaned.charAt(i), 10);
-      
+
       if (alternate) {
         n *= 2;
         if (n > 9) n = (n % 10) + 1;
       }
-      
+
       sum += n;
       alternate = !alternate;
     }
-    
+
     return sum % 10 === 0 || 'Invalid credit card number';
   },
 
@@ -295,11 +296,11 @@ export function quickValidate(
   rules: Record<string, (validator: Validator) => Validator>
 ): ValidationResult {
   const validator = new Validator(data);
-  
+
   Object.entries(rules).forEach(([field, rule]) => {
     rule(validator);
   });
-  
+
   return validator.getResult();
 }
 

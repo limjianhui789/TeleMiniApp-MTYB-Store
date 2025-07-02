@@ -27,16 +27,16 @@ class ResourcePreloader {
 
     const promise = new Promise<void>((resolve, reject) => {
       const img = new Image();
-      
+
       img.onload = () => {
         this.loadedResources.add(src);
         resolve();
       };
-      
+
       img.onerror = () => {
         reject(new Error(`Failed to load image: ${src}`));
       };
-      
+
       img.src = src;
     });
 
@@ -65,16 +65,16 @@ class ResourcePreloader {
 
     const promise = new Promise<void>((resolve, reject) => {
       const script = document.createElement('script');
-      
+
       script.onload = () => {
         this.loadedResources.add(src);
         resolve();
       };
-      
+
       script.onerror = () => {
         reject(new Error(`Failed to load script: ${src}`));
       };
-      
+
       script.src = src;
       script.async = true;
       document.head.appendChild(script);
@@ -98,16 +98,16 @@ class ResourcePreloader {
 
     const promise = new Promise<void>((resolve, reject) => {
       const link = document.createElement('link');
-      
+
       link.onload = () => {
         this.loadedResources.add(href);
         resolve();
       };
-      
+
       link.onerror = () => {
         reject(new Error(`Failed to load stylesheet: ${href}`));
       };
-      
+
       link.rel = 'stylesheet';
       link.href = href;
       document.head.appendChild(link);
@@ -203,7 +203,7 @@ class ResourcePreloader {
     return {
       loadedCount: this.loadedResources.size,
       loadingCount: this.loadingPromises.size,
-      loadedResources: Array.from(this.loadedResources)
+      loadedResources: Array.from(this.loadedResources),
     };
   }
 }
@@ -215,11 +215,8 @@ export const resourcePreloader = new ResourcePreloader();
 export const PRELOAD_CONFIGS = {
   // Critical resources needed immediately
   critical: {
-    images: [
-      '/images/logo.png',
-      '/images/curlec-logo.png'
-    ],
-    priority: 'high' as const
+    images: ['/images/logo.png', '/images/curlec-logo.png'],
+    priority: 'high' as const,
   },
 
   // Payment flow resources
@@ -227,17 +224,14 @@ export const PRELOAD_CONFIGS = {
     images: [
       '/images/payment-icons/visa.png',
       '/images/payment-icons/mastercard.png',
-      '/images/payment-icons/curlec.png'
+      '/images/payment-icons/curlec.png',
     ],
-    priority: 'high' as const
+    priority: 'high' as const,
   },
 
   // Product page resources
   products: {
-    images: [
-      '/images/placeholder-product.png',
-      '/images/category-icons/digital-goods.png'
-    ],
-    priority: 'low' as const
-  }
+    images: ['/images/placeholder-product.png', '/images/category-icons/digital-goods.png'],
+    priority: 'low' as const,
+  },
 };

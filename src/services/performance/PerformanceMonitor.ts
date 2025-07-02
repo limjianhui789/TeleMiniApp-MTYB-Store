@@ -48,9 +48,9 @@ export class PerformanceMonitor {
     highMemory: 512 * 1024 * 1024, // 512MB
     highCpu: 80, // 80%
     eventLoopLag: 100, // 100ms
-    gcDuration: 50 // 50ms
+    gcDuration: 50, // 50ms
   };
-  
+
   private observers: PerformanceObserver[] = [];
   private intervalId?: NodeJS.Timeout;
 
@@ -82,7 +82,7 @@ export class PerformanceMonitor {
       cpuUsage,
       statusCode,
       userId,
-      cacheHit
+      cacheHit,
     };
 
     this.metrics.push(metric);
@@ -98,7 +98,7 @@ export class PerformanceMonitor {
       const startTime = performance.now();
       const originalSend = res.send;
 
-      res.send = function(data: any) {
+      res.send = function (data: any) {
         const metric = req.app.locals.performanceMonitor?.trackRequest(
           req.path,
           req.method,
@@ -110,7 +110,7 @@ export class PerformanceMonitor {
 
         // Add performance header
         res.setHeader('X-Response-Time', `${metric.duration.toFixed(2)}ms`);
-        
+
         return originalSend.call(this, data);
       };
 
@@ -121,10 +121,10 @@ export class PerformanceMonitor {
   // Get performance statistics
   getStats(timeRange?: { start: Date; end: Date }) {
     let filteredMetrics = this.metrics;
-    
+
     if (timeRange) {
-      filteredMetrics = this.metrics.filter(m => 
-        m.timestamp >= timeRange.start && m.timestamp <= timeRange.end
+      filteredMetrics = this.metrics.filter(
+        m => m.timestamp >= timeRange.start && m.timestamp <= timeRange.end
       );
     }
 
@@ -134,7 +134,7 @@ export class PerformanceMonitor {
 
     const durations = filteredMetrics.map(m => m.duration);
     const memoryUsages = filteredMetrics.map(m => m.memoryUsage.heapUsed);
-    
+
     return {
       totalRequests: filteredMetrics.length,
       averageResponseTime: this.average(durations),
@@ -149,8 +149,8 @@ export class PerformanceMonitor {
       endpointStats: this.getEndpointStats(filteredMetrics),
       timeRange: {
         start: Math.min(...filteredMetrics.map(m => m.timestamp.getTime())),
-        end: Math.max(...filteredMetrics.map(m => m.timestamp.getTime()))
-      }
+        end: Math.max(...filteredMetrics.map(m => m.timestamp.getTime())),
+      },
     };
   }
 
@@ -158,25 +158,25 @@ export class PerformanceMonitor {
   getCurrentResourceMetrics(): ResourceMetrics {
     const memUsage = process.memoryUsage();
     const cpuUsage = process.cpuUsage();
-    
+
     return {
       cpu: {
         usage: this.calculateCpuPercentage(cpuUsage),
-        load: process.platform !== 'win32' ? require('os').loadavg() : [0, 0, 0]
+        load: process.platform !== 'win32' ? require('os').loadavg() : [0, 0, 0],
       },
       memory: {
         used: memUsage.heapUsed,
         total: memUsage.heapTotal,
-        percentage: (memUsage.heapUsed / memUsage.heapTotal) * 100
+        percentage: (memUsage.heapUsed / memUsage.heapTotal) * 100,
       },
       gc: {
         collections: 0, // Will be updated by observer
-        duration: 0 // Will be updated by observer
+        duration: 0, // Will be updated by observer
       },
       eventLoop: {
         delay: this.measureEventLoopDelay(),
-        utilization: this.measureEventLoopUtilization()
-      }
+        utilization: this.measureEventLoopUtilization(),
+      },
     };
   }
 
@@ -191,7 +191,7 @@ export class PerformanceMonitor {
   // Clear old metrics and alerts
   cleanup(maxAge: number = 24 * 60 * 60 * 1000): void {
     const cutoff = new Date(Date.now() - maxAge);
-    
+
     this.metrics = this.metrics.filter(m => m.timestamp > cutoff);
     this.alerts = this.alerts.filter(a => a.timestamp > cutoff);
   }
@@ -200,26 +200,26 @@ export class PerformanceMonitor {
   private setupPerformanceObservers(): void {
     // HTTP request observer
     if (PerformanceObserver.supportedEntryTypes.includes('measure')) {
-      const httpObserver = new PerformanceObserver((list) => {
+      const httpObserver = new PerformanceObserver(list => {
         for (const entry of list.getEntries()) {
           if (entry.name.startsWith('http-request')) {
             this.analyzeHttpTiming(entry);
           }
         }
       });
-      
+
       httpObserver.observe({ entryTypes: ['measure'] });
       this.observers.push(httpObserver);
     }
 
     // GC observer
     if (PerformanceObserver.supportedEntryTypes.includes('gc')) {
-      const gcObserver = new PerformanceObserver((list) => {
+      const gcObserver = new PerformanceObserver(list => {
         for (const entry of list.getEntries()) {
           this.analyzeGcTiming(entry);
         }
       });
-      
+
       gcObserver.observe({ entryTypes: ['gc'] });
       this.observers.push(gcObserver);
     }
@@ -242,7 +242,7 @@ export class PerformanceMonitor {
         severity: metric.duration > this.thresholds.slowRequest * 2 ? 'critical' : 'warning',
         message: `Slow request detected: ${metric.endpoint} took ${metric.duration.toFixed(2)}ms`,
         metrics: metric,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
 
@@ -250,10 +250,11 @@ export class PerformanceMonitor {
     if (metric.memoryUsage.heapUsed > this.thresholds.highMemory) {
       this.addAlert({
         type: 'high_memory',
-        severity: metric.memoryUsage.heapUsed > this.thresholds.highMemory * 1.5 ? 'critical' : 'warning',
+        severity:
+          metric.memoryUsage.heapUsed > this.thresholds.highMemory * 1.5 ? 'critical' : 'warning',
         message: `High memory usage: ${(metric.memoryUsage.heapUsed / (1024 * 1024)).toFixed(2)}MB`,
         metrics: metric.memoryUsage,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
   }
@@ -267,7 +268,7 @@ export class PerformanceMonitor {
         severity: metrics.cpu.usage > 95 ? 'critical' : 'warning',
         message: `High CPU usage: ${metrics.cpu.usage.toFixed(2)}%`,
         metrics: metrics.cpu,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
 
@@ -275,10 +276,11 @@ export class PerformanceMonitor {
     if (metrics.eventLoop.delay > this.thresholds.eventLoopLag) {
       this.addAlert({
         type: 'event_loop_lag',
-        severity: metrics.eventLoop.delay > this.thresholds.eventLoopLag * 2 ? 'critical' : 'warning',
+        severity:
+          metrics.eventLoop.delay > this.thresholds.eventLoopLag * 2 ? 'critical' : 'warning',
         message: `Event loop lag detected: ${metrics.eventLoop.delay.toFixed(2)}ms`,
         metrics: metrics.eventLoop,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
   }
@@ -286,7 +288,7 @@ export class PerformanceMonitor {
   // Add performance alert
   private addAlert(alert: PerformanceAlert): void {
     this.alerts.push(alert);
-    
+
     // Log critical alerts immediately
     if (alert.severity === 'critical') {
       console.error('🚨 CRITICAL PERFORMANCE ALERT:', alert);
@@ -316,7 +318,7 @@ export class PerformanceMonitor {
         severity: entry.duration > this.thresholds.gcDuration * 2 ? 'critical' : 'warning',
         message: `Long GC pause: ${entry.duration.toFixed(2)}ms (${entry.detail?.kind || 'unknown'})`,
         metrics: { duration: entry.duration, kind: entry.detail?.kind },
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
   }
@@ -352,9 +354,7 @@ export class PerformanceMonitor {
   private median(numbers: number[]): number {
     const sorted = [...numbers].sort((a, b) => a - b);
     const mid = Math.floor(sorted.length / 2);
-    return sorted.length % 2 === 0 
-      ? (sorted[mid - 1] + sorted[mid]) / 2 
-      : sorted[mid];
+    return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
   }
 
   private percentile(numbers: number[], p: number): number {
@@ -366,7 +366,7 @@ export class PerformanceMonitor {
   private calculateCacheHitRate(metrics: PerformanceMetrics[]): number {
     const withCacheInfo = metrics.filter(m => m.cacheHit !== undefined);
     if (withCacheInfo.length === 0) return 0;
-    
+
     const hits = withCacheInfo.filter(m => m.cacheHit).length;
     return (hits / withCacheInfo.length) * 100;
   }
@@ -374,14 +374,14 @@ export class PerformanceMonitor {
   private calculateErrorRate(metrics: PerformanceMetrics[]): number {
     const withStatusCode = metrics.filter(m => m.statusCode !== undefined);
     if (withStatusCode.length === 0) return 0;
-    
+
     const errors = withStatusCode.filter(m => m.statusCode! >= 400).length;
     return (errors / withStatusCode.length) * 100;
   }
 
   private getEndpointStats(metrics: PerformanceMetrics[]) {
     const endpointMap = new Map<string, PerformanceMetrics[]>();
-    
+
     for (const metric of metrics) {
       const key = `${metric.method} ${metric.endpoint}`;
       if (!endpointMap.has(key)) {
@@ -391,7 +391,7 @@ export class PerformanceMonitor {
     }
 
     const stats: any = {};
-    
+
     for (const [endpoint, endpointMetrics] of endpointMap.entries()) {
       const durations = endpointMetrics.map(m => m.duration);
       stats[endpoint] = {
@@ -400,7 +400,7 @@ export class PerformanceMonitor {
         medianTime: this.median(durations),
         maxTime: Math.max(...durations),
         minTime: Math.min(...durations),
-        errorRate: this.calculateErrorRate(endpointMetrics)
+        errorRate: this.calculateErrorRate(endpointMetrics),
       };
     }
 
@@ -418,7 +418,7 @@ export class PerformanceMonitor {
     for (const observer of this.observers) {
       observer.disconnect();
     }
-    
+
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }

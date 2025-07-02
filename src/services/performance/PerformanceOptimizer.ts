@@ -105,7 +105,7 @@ export class PerformanceOptimizer {
    */
   async loadModule<T = any>(modulePath: string): Promise<T> {
     const cacheKey = `module:${modulePath}`;
-    
+
     if (this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey)!;
       if (!this.isCacheExpired(cached)) {
@@ -123,7 +123,7 @@ export class PerformanceOptimizer {
         data: module,
         timestamp: Date.now(),
         maxAge: this.config.cacheStrategy.staticAssets.maxAge * 1000,
-        loadTime
+        loadTime,
       });
 
       // Track performance
@@ -162,13 +162,12 @@ export class PerformanceOptimizer {
           data: response.clone(),
           timestamp: Date.now(),
           maxAge: cachePolicy.maxAge * 1000,
-          loadTime
+          loadTime,
         });
       }
 
       this.trackCustomMetric('apiResponseTime', loadTime);
       return response;
-
     } catch (error) {
       // Fallback to cache for network-first strategy
       if (cachePolicy.strategy === 'network-first') {
@@ -228,7 +227,7 @@ export class PerformanceOptimizer {
    */
   private setupLazyLoading(): void {
     if ('IntersectionObserver' in window) {
-      const imageObserver = new IntersectionObserver((entries) => {
+      const imageObserver = new IntersectionObserver(entries => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             const img = entry.target as HTMLImageElement;
@@ -309,7 +308,7 @@ export class PerformanceOptimizer {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
         console.log('Service Worker registered successfully:', registration);
-        
+
         // Listen for updates
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
@@ -332,8 +331,8 @@ export class PerformanceOptimizer {
    * Fetch with retry logic and exponential backoff
    */
   private async fetchWithRetry(
-    url: string, 
-    options: RequestInit, 
+    url: string,
+    options: RequestInit,
     maxRetries: number = 3
   ): Promise<Response> {
     let lastError: Error;
@@ -347,7 +346,7 @@ export class PerformanceOptimizer {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       } catch (error) {
         lastError = error as Error;
-        
+
         if (attempt < maxRetries) {
           const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
           await new Promise(resolve => setTimeout(resolve, delay));
@@ -370,7 +369,7 @@ export class PerformanceOptimizer {
       chunkSizes: {},
       dependencies: [],
       duplicates: [],
-      unusedCode: []
+      unusedCode: [],
     };
   }
 
@@ -382,7 +381,7 @@ export class PerformanceOptimizer {
       metrics: { ...this.metrics },
       cacheHitRate: this.calculateCacheHitRate(),
       recommendations: this.generateRecommendations(),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
@@ -415,33 +414,33 @@ export class PerformanceOptimizer {
           strategy: 'cache-first',
           maxAge: 31536000, // 1 year
           maxEntries: 100,
-          excludePatterns: []
+          excludePatterns: [],
         },
         apiResponses: {
           strategy: 'network-first',
           maxAge: 300, // 5 minutes
           maxEntries: 50,
-          excludePatterns: ['/api/auth/', '/api/payment/']
+          excludePatterns: ['/api/auth/', '/api/payment/'],
         },
         userData: {
           strategy: 'network-first',
           maxAge: 60, // 1 minute
           maxEntries: 20,
-          excludePatterns: []
+          excludePatterns: [],
         },
         pluginAssets: {
           strategy: 'stale-while-revalidate',
           maxAge: 3600, // 1 hour
           maxEntries: 200,
-          excludePatterns: []
-        }
+          excludePatterns: [],
+        },
       },
       resourceHints: {
         preload: ['/assets/fonts/main.woff2', '/assets/css/critical.css'],
         prefetch: ['/chunks/vendor.js', '/chunks/plugins.js'],
         preconnect: ['https://api.mtyb.shop', 'https://cdn.mtyb.shop'],
-        dnsPrefetch: ['https://analytics.google.com', 'https://fonts.googleapis.com']
-      }
+        dnsPrefetch: ['https://analytics.google.com', 'https://fonts.googleapis.com'],
+      },
     };
 
     return { ...defaultConfig, ...userConfig };
@@ -454,7 +453,7 @@ export class PerformanceOptimizer {
       fid: 0,
       cls: 0,
       ttfb: 0,
-      customMetrics: {}
+      customMetrics: {},
     };
   }
 

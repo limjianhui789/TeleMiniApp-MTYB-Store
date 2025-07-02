@@ -25,7 +25,7 @@ export const usePreloader = (options: UsePreloaderOptions = {}) => {
     isLoading: false,
     isComplete: false,
     progress: 0,
-    error: null
+    error: null,
   });
 
   const preload = async (configKey?: keyof typeof PRELOAD_CONFIGS | string[]) => {
@@ -33,7 +33,7 @@ export const usePreloader = (options: UsePreloaderOptions = {}) => {
 
     try {
       let resources: string[] = [];
-      
+
       if (Array.isArray(configKey)) {
         resources = configKey;
       } else if (configKey && PRELOAD_CONFIGS[configKey]) {
@@ -63,7 +63,7 @@ export const usePreloader = (options: UsePreloaderOptions = {}) => {
           await resourcePreloader.preloadImage(resource);
           loadedCount++;
           const progress = Math.round((loadedCount / total) * 100);
-          
+
           setState(prev => ({ ...prev, progress }));
           options.onProgress?.(loadedCount, total);
         } catch (error) {
@@ -73,21 +73,20 @@ export const usePreloader = (options: UsePreloaderOptions = {}) => {
         }
       }
 
-      setState(prev => ({ 
-        ...prev, 
-        isLoading: false, 
-        isComplete: true, 
-        progress: 100 
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        isComplete: true,
+        progress: 100,
       }));
-      
-      options.onComplete?.();
 
+      options.onComplete?.();
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Preload failed');
-      setState(prev => ({ 
-        ...prev, 
-        isLoading: false, 
-        error: err 
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: err,
       }));
       options.onError?.(err);
     }
@@ -103,7 +102,7 @@ export const usePreloader = (options: UsePreloaderOptions = {}) => {
     ...state,
     preload,
     preloadConfig: (configKey: keyof typeof PRELOAD_CONFIGS) => preload(configKey),
-    preloadImages: (images: string[]) => preload(images)
+    preloadImages: (images: string[]) => preload(images),
   };
 };
 
@@ -116,10 +115,10 @@ export const useCriticalPreloader = () => {
       try {
         // Create preload links for immediate download
         resourcePreloader.createPreloadLinks(PRELOAD_CONFIGS.critical);
-        
+
         // Wait for critical resources to load
         await resourcePreloader.preloadResources(PRELOAD_CONFIGS.critical);
-        
+
         setIsReady(true);
       } catch (error) {
         console.warn('Failed to preload critical resources:', error);

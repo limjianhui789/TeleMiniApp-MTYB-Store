@@ -29,7 +29,7 @@ export const useTelegramUser = (): UseTelegramUserReturn => {
       // Check if we're in Telegram WebApp environment
       if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
         const tg = window.Telegram.WebApp;
-        
+
         // Get user data from initDataUnsafe
         if (tg.initDataUnsafe?.user) {
           setUser(tg.initDataUnsafe.user);
@@ -39,7 +39,7 @@ export const useTelegramUser = (): UseTelegramUserReturn => {
             id: 123456789,
             first_name: 'Test',
             last_name: 'User',
-            username: 'testuser'
+            username: 'testuser',
           });
         }
       } else {
@@ -48,7 +48,7 @@ export const useTelegramUser = (): UseTelegramUserReturn => {
           id: 123456789,
           first_name: 'Dev',
           last_name: 'User',
-          username: 'devuser'
+          username: 'devuser',
         });
       }
     } catch (err) {
@@ -65,6 +65,6 @@ export const useTelegramUser = (): UseTelegramUserReturn => {
     user,
     userId,
     isLoading,
-    error
+    error,
   };
 };

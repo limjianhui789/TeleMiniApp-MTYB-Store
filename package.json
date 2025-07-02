@@ -38,6 +38,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.19.4",
     "@types/react": "^18.2.0",
@@ -56,6 +58,7 @@
     "identity-obj-proxy": "^3.0.0",
     "jest": "^30.0.2",
     "jest-environment-jsdom": "^30.0.2",
+    "jest-transform-stub": "^2.0.0",
     "prettier": "^3.5.3",
     "terser": "^5.42.0",
     "ts-jest": "^29.4.0",

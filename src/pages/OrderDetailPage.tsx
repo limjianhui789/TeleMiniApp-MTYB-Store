@@ -32,7 +32,7 @@ export const OrderDetailPage: React.FC = () => {
     try {
       setLoading(true);
       const orderData = await orderService.getOrder(orderId);
-      
+
       if (!orderData) {
         setError('Order not found');
         return;
@@ -95,9 +95,7 @@ export const OrderDetailPage: React.FC = () => {
             <p style={{ color: 'var(--text-secondary, #6b7280)', margin: '1rem 0 2rem 0' }}>
               {error || 'The requested order could not be found.'}
             </p>
-            <Button onClick={() => navigate('/products')}>
-              Continue Shopping
-            </Button>
+            <Button onClick={() => navigate('/products')}>Continue Shopping</Button>
           </div>
         </Card>
       </div>
@@ -107,133 +105,143 @@ export const OrderDetailPage: React.FC = () => {
   return (
     <ErrorBoundary>
       <div className="order-detail-page">
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '2rem' }}>
-          <Button
-            variant="ghost"
-            onClick={() => navigate(-1)}
-            style={{ marginBottom: '1rem' }}
-          >
-            ← Back
-          </Button>
-          <h1>Order Details</h1>
-        </div>
-
-        {/* Order Status */}
-        <Card style={{ marginBottom: '2rem' }}>
-          <div style={{ padding: '2rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-              <span style={{ fontSize: '2rem' }}>{getStatusIcon(order.status)}</span>
-              <div>
-                <h2 style={{ margin: 0, color: getStatusColor(order.status) }}>
-                  {order.status.replace('_', ' ').toUpperCase()}
-                </h2>
-                <p style={{ margin: 0, color: 'var(--text-secondary, #6b7280)' }}>
-                  Order #{order.id}
-                </p>
-              </div>
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-              <div>
-                <strong>Order Date:</strong>
-                <br />
-                {order.createdAt.toLocaleDateString()}
-              </div>
-              <div>
-                <strong>Payment Method:</strong>
-                <br />
-                {order.paymentMethod}
-              </div>
-              <div>
-                <strong>Total Amount:</strong>
-                <br />
-                {order.currency} {order.totalAmount.toFixed(2)}
-              </div>
-            </div>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem' }}>
+          {/* Header */}
+          <div style={{ marginBottom: '2rem' }}>
+            <Button variant="ghost" onClick={() => navigate(-1)} style={{ marginBottom: '1rem' }}>
+              ← Back
+            </Button>
+            <h1>Order Details</h1>
           </div>
-        </Card>
 
-        {/* Order Items */}
-        <Card style={{ marginBottom: '2rem' }}>
-          <div style={{ padding: '2rem' }}>
-            <h3 style={{ marginTop: 0 }}>Order Items</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {order.items.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '1rem',
-                    border: '1px solid var(--border-color, #e5e7eb)',
-                    borderRadius: '0.5rem',
-                  }}
-                >
-                  <div>
-                    <div style={{ fontWeight: 'bold' }}>{item.productName || `Product ${item.productId}`}</div>
-                    <div style={{ color: 'var(--text-secondary, #6b7280)', fontSize: '0.875rem' }}>
-                      Quantity: {item.quantity}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 'bold' }}>
-                      {order.currency} {(item.price * item.quantity).toFixed(2)}
-                    </div>
-                    <div style={{ color: 'var(--text-secondary, #6b7280)', fontSize: '0.875rem' }}>
-                      {order.currency} {item.price.toFixed(2)} each
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-
-        {/* Payment Information */}
-        {order.paymentId && (
+          {/* Order Status */}
           <Card style={{ marginBottom: '2rem' }}>
             <div style={{ padding: '2rem' }}>
-              <h3 style={{ marginTop: 0 }}>Payment Information</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}
+              >
+                <span style={{ fontSize: '2rem' }}>{getStatusIcon(order.status)}</span>
                 <div>
-                  <strong>Payment ID:</strong>
+                  <h2 style={{ margin: 0, color: getStatusColor(order.status) }}>
+                    {order.status.replace('_', ' ').toUpperCase()}
+                  </h2>
+                  <p style={{ margin: 0, color: 'var(--text-secondary, #6b7280)' }}>
+                    Order #{order.id}
+                  </p>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1rem',
+                }}
+              >
+                <div>
+                  <strong>Order Date:</strong>
                   <br />
-                  <span style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
-                    {order.paymentId}
-                  </span>
+                  {order.createdAt.toLocaleDateString()}
                 </div>
                 <div>
-                  <strong>Payment Status:</strong>
+                  <strong>Payment Method:</strong>
                   <br />
-                  {order.paymentStatus || 'Unknown'}
+                  {order.paymentMethod}
+                </div>
+                <div>
+                  <strong>Total Amount:</strong>
+                  <br />
+                  {order.currency} {order.totalAmount.toFixed(2)}
                 </div>
               </div>
             </div>
           </Card>
-        )}
 
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-          <Button
-            variant="primary"
-            onClick={() => navigate('/products')}
-          >
-            Continue Shopping
-          </Button>
-          
-          {order.status === OrderStatus.FAILED && (
-            <Button
-              variant="outline"
-              onClick={() => navigate('/cart')}
-            >
-              Try Again
-            </Button>
+          {/* Order Items */}
+          <Card style={{ marginBottom: '2rem' }}>
+            <div style={{ padding: '2rem' }}>
+              <h3 style={{ marginTop: 0 }}>Order Items</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {order.items.map(item => (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '1rem',
+                      border: '1px solid var(--border-color, #e5e7eb)',
+                      borderRadius: '0.5rem',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 'bold' }}>
+                        {item.productName || `Product ${item.productId}`}
+                      </div>
+                      <div
+                        style={{ color: 'var(--text-secondary, #6b7280)', fontSize: '0.875rem' }}
+                      >
+                        Quantity: {item.quantity}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontWeight: 'bold' }}>
+                        {order.currency} {(item.price * item.quantity).toFixed(2)}
+                      </div>
+                      <div
+                        style={{ color: 'var(--text-secondary, #6b7280)', fontSize: '0.875rem' }}
+                      >
+                        {order.currency} {item.price.toFixed(2)} each
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+
+          {/* Payment Information */}
+          {order.paymentId && (
+            <Card style={{ marginBottom: '2rem' }}>
+              <div style={{ padding: '2rem' }}>
+                <h3 style={{ marginTop: 0 }}>Payment Information</h3>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '1rem',
+                  }}
+                >
+                  <div>
+                    <strong>Payment ID:</strong>
+                    <br />
+                    <span style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                      {order.paymentId}
+                    </span>
+                  </div>
+                  <div>
+                    <strong>Payment Status:</strong>
+                    <br />
+                    {order.paymentStatus || 'Unknown'}
+                  </div>
+                </div>
+              </div>
+            </Card>
           )}
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <Button variant="primary" onClick={() => navigate('/products')}>
+              Continue Shopping
+            </Button>
+
+            {order.status === OrderStatus.FAILED && (
+              <Button variant="outline" onClick={() => navigate('/cart')}>
+                Try Again
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
       </div>
     </ErrorBoundary>
   );

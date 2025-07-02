@@ -100,8 +100,8 @@ export class PluginSandbox extends PluginEventEmitter {
    * Execute plugin code in secure browser sandbox
    */
   async execute(
-    code: string, 
-    context: ExecutionContext, 
+    code: string,
+    context: ExecutionContext,
     options: Partial<SandboxOptions> = {}
   ): Promise<ExecutionResult> {
     const startTime = Date.now();
@@ -112,13 +112,15 @@ export class PluginSandbox extends PluginEventEmitter {
       // Security pre-analysis
       const preAnalysis = await this.securityAnalyzer.analyzeCode(code);
       if (preAnalysis.threats.length > 0) {
-        violations.push(...preAnalysis.threats.map(threat => ({
-          type: 'malicious' as const,
-          severity: threat.severity,
-          description: threat.description,
-          timestamp: new Date(),
-          metadata: { threat: threat.type }
-        })));
+        violations.push(
+          ...preAnalysis.threats.map(threat => ({
+            type: 'malicious' as const,
+            severity: threat.severity,
+            description: threat.description,
+            timestamp: new Date(),
+            metadata: { threat: threat.type },
+          }))
+        );
 
         if (preAnalysis.threats.some(t => t.severity === 'critical')) {
           throw new Error('Critical security threats detected in plugin code');
@@ -128,7 +130,7 @@ export class PluginSandbox extends PluginEventEmitter {
       // Create secure sandbox
       const sandboxInstance = this.createSecureSandbox(context, options);
       const sandboxId = this.generateSandboxId(context);
-      
+
       this.activeSandboxes.set(sandboxId, sandboxInstance);
 
       // Start resource monitoring
@@ -153,9 +155,8 @@ export class PluginSandbox extends PluginEventEmitter {
         executionTime: Date.now() - startTime,
         memoryUsed: resourceUsage.memoryEstimate,
         resourceUsage,
-        violations
+        violations,
       };
-
     } catch (error) {
       const resourceUsage = resourceMonitor.stop();
       this.cleanupSandbox(this.generateSandboxId(context));
@@ -166,7 +167,7 @@ export class PluginSandbox extends PluginEventEmitter {
         executionTime: Date.now() - startTime,
         memoryUsed: resourceUsage?.memoryEstimate || 0,
         resourceUsage: resourceUsage || this.getEmptyResourceUsage(),
-        violations
+        violations,
       };
     }
   }
@@ -175,27 +176,30 @@ export class PluginSandbox extends PluginEventEmitter {
    * Validate plugin permissions
    */
   async validatePermissions(
-    requestedPermissions: PluginPermission[], 
+    requestedPermissions: PluginPermission[],
     context: ExecutionContext
   ): Promise<{ valid: boolean; violations: string[] }> {
     const violations: string[] = [];
 
     for (const permission of requestedPermissions) {
-      if (!await this.isPermissionAllowed(permission, context)) {
+      if (!(await this.isPermissionAllowed(permission, context))) {
         violations.push(`Permission ${permission.type}:${permission.resource} not allowed`);
       }
     }
 
     return {
       valid: violations.length === 0,
-      violations
+      violations,
     };
   }
 
   /**
    * Create isolated browser-based sandbox
    */
-  private createSecureSandbox(context: ExecutionContext, options: Partial<SandboxOptions>): SandboxInstance {
+  private createSecureSandbox(
+    context: ExecutionContext,
+    options: Partial<SandboxOptions>
+  ): SandboxInstance {
     const defaultOptions: SandboxOptions = {
       timeout: 30000, // 30 seconds
       memoryLimit: 128, // 128 MB
@@ -210,17 +214,17 @@ export class PluginSandbox extends PluginEventEmitter {
         maxMemoryUsage: 128 * 1024 * 1024,
         maxNetworkCalls: 10,
         maxStorageOperations: 20,
-        maxDOMOperations: 50
-      }
+        maxDOMOperations: 50,
+      },
     };
 
     const config = { ...defaultOptions, ...options };
 
-         // Create secure iframe-based sandbox
-     const iframe = document.createElement('iframe');
-     iframe.style.display = 'none';
-     iframe.setAttribute('sandbox', 'allow-scripts');
-     document.body.appendChild(iframe);
+    // Create secure iframe-based sandbox
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.setAttribute('sandbox', 'allow-scripts');
+    document.body.appendChild(iframe);
 
     const sandboxWindow = iframe.contentWindow;
     if (!sandboxWindow) {
@@ -234,21 +238,24 @@ export class PluginSandbox extends PluginEventEmitter {
       iframe,
       window: sandboxWindow,
       api: secureAPI,
-      config
+      config,
     };
   }
 
   /**
    * Create secure API for plugins
    */
-  private createSandboxAPI(context: ExecutionContext, options: SandboxOptions): Record<string, any> {
+  private createSandboxAPI(
+    context: ExecutionContext,
+    options: SandboxOptions
+  ): Record<string, any> {
     return {
       // Safe console implementation
       console: {
         log: (...args: any[]) => this.secureLog('log', context, args),
         warn: (...args: any[]) => this.secureLog('warn', context, args),
         error: (...args: any[]) => this.secureLog('error', context, args),
-        info: (...args: any[]) => this.secureLog('info', context, args)
+        info: (...args: any[]) => this.secureLog('info', context, args),
       },
 
       // Secure HTTP client
@@ -261,18 +268,18 @@ export class PluginSandbox extends PluginEventEmitter {
       plugin: {
         id: context.pluginId,
         version: context.version,
-        userId: context.userId
+        userId: context.userId,
       },
 
       // Secure utility functions
       utils: {
         hash: (data: string) => this.simpleHash(data),
         uuid: () => this.generateUUID(),
-        timestamp: () => Date.now()
+        timestamp: () => Date.now(),
       },
 
       // Resource monitoring
-      getResourceUsage: () => this.getEmptyResourceUsage()
+      getResourceUsage: () => this.getEmptyResourceUsage(),
     };
   }
 
@@ -280,26 +287,26 @@ export class PluginSandbox extends PluginEventEmitter {
    * Execute code in sandbox with monitoring
    */
   private async executeInSandbox(
-    sandbox: SandboxInstance, 
-    code: string, 
-    context: ExecutionContext, 
+    sandbox: SandboxInstance,
+    code: string,
+    context: ExecutionContext,
     options: Partial<SandboxOptions>
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       const timeout = options.timeout || 30000;
-      
+
       // Set timeout for execution
       const timeoutId = setTimeout(() => {
         reject(new Error('Plugin execution timeout'));
       }, timeout);
 
-             try {
-         // Create secure execution environment
-         const secureCode = this.wrapCodeForSandbox(code, sandbox.api);
-         
-         // Execute in iframe context using script injection
-         const script = sandbox.iframe.contentDocument!.createElement('script');
-         script.textContent = `
+      try {
+        // Create secure execution environment
+        const secureCode = this.wrapCodeForSandbox(code, sandbox.api);
+
+        // Execute in iframe context using script injection
+        const script = sandbox.iframe.contentDocument!.createElement('script');
+        script.textContent = `
            try {
              const result = ${secureCode};
              window.parent.postMessage({ type: 'plugin_result', result }, '*');
@@ -307,27 +314,26 @@ export class PluginSandbox extends PluginEventEmitter {
              window.parent.postMessage({ type: 'plugin_error', error: error.message }, '*');
            }
          `;
-         
-         // Set up message listener for result
-         const messageHandler = (event: MessageEvent) => {
-           if (event.data.type === 'plugin_result') {
-             window.removeEventListener('message', messageHandler);
-             clearTimeout(timeoutId);
-             resolve(event.data.result);
-           } else if (event.data.type === 'plugin_error') {
-             window.removeEventListener('message', messageHandler);
-             clearTimeout(timeoutId);
-             reject(new Error(event.data.error));
-           }
-         };
-         
-         window.addEventListener('message', messageHandler);
-         sandbox.iframe.contentDocument!.head.appendChild(script);
-         
-       } catch (error) {
-         clearTimeout(timeoutId);
-         reject(error);
-       }
+
+        // Set up message listener for result
+        const messageHandler = (event: MessageEvent) => {
+          if (event.data.type === 'plugin_result') {
+            window.removeEventListener('message', messageHandler);
+            clearTimeout(timeoutId);
+            resolve(event.data.result);
+          } else if (event.data.type === 'plugin_error') {
+            window.removeEventListener('message', messageHandler);
+            clearTimeout(timeoutId);
+            reject(new Error(event.data.error));
+          }
+        };
+
+        window.addEventListener('message', messageHandler);
+        sandbox.iframe.contentDocument!.head.appendChild(script);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        reject(error);
+      }
     });
   }
 
@@ -337,7 +343,7 @@ export class PluginSandbox extends PluginEventEmitter {
   private wrapCodeForSandbox(code: string, api: Record<string, any>): string {
     const apiKeys = Object.keys(api);
     const apiAssignments = apiKeys.map(key => `var ${key} = arguments[0].${key};`).join('\n');
-    
+
     return `
       (function(secureAPI) {
         'use strict';
@@ -379,7 +385,7 @@ export class PluginSandbox extends PluginEventEmitter {
       pluginId: context.pluginId,
       userId: context.userId,
       message: filteredArgs.join(' '),
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
@@ -405,7 +411,7 @@ export class PluginSandbox extends PluginEventEmitter {
         ...init,
         // Remove timeout property as it's not standard
         mode: 'cors',
-        credentials: 'same-origin'
+        credentials: 'same-origin',
       });
 
       return response;
@@ -423,7 +429,7 @@ export class PluginSandbox extends PluginEventEmitter {
         if (operationCount >= options.resourceLimits.maxStorageOperations) {
           throw new Error('Storage operation limit exceeded');
         }
-        
+
         operationCount++;
 
         // Implement namespaced storage access
@@ -445,21 +451,25 @@ export class PluginSandbox extends PluginEventEmitter {
         // Implement namespaced storage with size limits
         const namespacedKey = `plugin:${context.pluginId}:${context.userId}:${key}`;
         localStorage.setItem(namespacedKey, value);
-      }
+      },
     };
   }
 
-  private async isPermissionAllowed(permission: PluginPermission, context: ExecutionContext): Promise<boolean> {
-    return context.permissions.some(p => 
-      p.type === permission.type && 
-      p.resource === permission.resource &&
-      permission.action.every(action => p.action.includes(action))
+  private async isPermissionAllowed(
+    permission: PluginPermission,
+    context: ExecutionContext
+  ): Promise<boolean> {
+    return context.permissions.some(
+      p =>
+        p.type === permission.type &&
+        p.resource === permission.resource &&
+        permission.action.every(action => p.action.includes(action))
     );
   }
 
   private isUrlAllowed(url: string, permissions: PluginPermission[]): boolean {
     const networkPermissions = permissions.filter(p => p.type === 'network');
-    
+
     if (networkPermissions.length === 0) {
       return false;
     }
@@ -475,7 +485,10 @@ export class PluginSandbox extends PluginEventEmitter {
     });
   }
 
-  private checkResourceViolations(usage: ResourceUsage, options: Partial<SandboxOptions>): SecurityViolation[] {
+  private checkResourceViolations(
+    usage: ResourceUsage,
+    options: Partial<SandboxOptions>
+  ): SecurityViolation[] {
     const violations: SecurityViolation[] = [];
     const limits = options.resourceLimits;
 
@@ -486,7 +499,7 @@ export class PluginSandbox extends PluginEventEmitter {
         type: 'resource',
         severity: 'high',
         description: `Execution time limit exceeded: ${usage.executionTime}ms > ${limits.maxExecutionTime}ms`,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
 
@@ -511,7 +524,7 @@ export class PluginSandbox extends PluginEventEmitter {
       memoryEstimate: 0,
       networkCalls: 0,
       storageOperations: 0,
-      domOperations: 0
+      domOperations: 0,
     };
   }
 
@@ -519,16 +532,16 @@ export class PluginSandbox extends PluginEventEmitter {
     let hash = 0;
     for (let i = 0; i < data.length; i++) {
       const char = data.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32bit integer
     }
     return hash.toString(16);
   }
 
   private generateUUID(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
   }
@@ -560,7 +573,7 @@ class ResourceMonitor {
       memoryEstimate: this.estimateMemoryUsage(),
       networkCalls: this.networkCalls,
       storageOperations: this.storageOperations,
-      domOperations: this.domOperations
+      domOperations: this.domOperations,
     };
   }
 
@@ -595,10 +608,22 @@ class SecurityAnalyzer {
     { pattern: /document\.write/, type: 'dom_injection', severity: 'high' as const },
     { pattern: /innerHTML\s*=/, type: 'dom_injection', severity: 'medium' as const },
     { pattern: /while\s*\(\s*true\s*\)/, type: 'infinite_loop', severity: 'medium' as const },
-    { pattern: /setInterval\s*\(.*,\s*0\s*\)/, type: 'cpu_exhaustion', severity: 'medium' as const }
+    {
+      pattern: /setInterval\s*\(.*,\s*0\s*\)/,
+      type: 'cpu_exhaustion',
+      severity: 'medium' as const,
+    },
   ];
 
-  async analyzeCode(code: string): Promise<{ threats: Array<{ type: string; severity: 'low' | 'medium' | 'high' | 'critical'; description: string }> }> {
+  async analyzeCode(
+    code: string
+  ): Promise<{
+    threats: Array<{
+      type: string;
+      severity: 'low' | 'medium' | 'high' | 'critical';
+      description: string;
+    }>;
+  }> {
     const threats = [];
 
     for (const { pattern, type, severity } of this.dangerousPatterns) {
@@ -606,7 +631,7 @@ class SecurityAnalyzer {
         threats.push({
           type,
           severity,
-          description: `Potentially dangerous pattern detected: ${type}`
+          description: `Potentially dangerous pattern detected: ${type}`,
         });
       }
     }

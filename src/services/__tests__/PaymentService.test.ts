@@ -21,19 +21,19 @@ describe('PaymentService', () => {
         success: true,
         paymentId: 'pay_test_123',
         redirectUrl: 'https://payment.gateway.com/redirect',
-        status: PaymentStatus.PENDING
+        status: PaymentStatus.PENDING,
       };
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockResponse
+        json: async () => mockResponse,
       });
 
       const paymentRequest: PaymentRequest = {
         orderId: 'order_123',
-        amount: 100.00,
+        amount: 100.0,
         currency: 'MYR',
-        method: PaymentMethod.CURLEC
+        method: PaymentMethod.CURLEC,
       };
 
       const result = await paymentService.createPayment(paymentRequest);
@@ -46,9 +46,9 @@ describe('PaymentService', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           }),
-          body: expect.stringContaining('"orderId":"order_123"')
+          body: expect.stringContaining('"orderId":"order_123"'),
         })
       );
     });
@@ -56,23 +56,23 @@ describe('PaymentService', () => {
     it('should handle payment creation failure', async () => {
       const mockErrorResponse = {
         success: false,
-        error: 'Invalid payment details'
+        error: 'Invalid payment details',
       };
 
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
-        json: async () => mockErrorResponse
+        json: async () => mockErrorResponse,
       });
 
       const paymentRequest: PaymentRequest = {
         orderId: 'order_123',
-        amount: -10.00, // Invalid amount
+        amount: -10.0, // Invalid amount
         currency: 'MYR',
         paymentMethod: PaymentMethod.CURLEC,
         customerEmail: 'invalid-email',
         customerPhone: '123',
-        description: 'Test payment'
+        description: 'Test payment',
       };
 
       const result = await paymentService.createPayment(paymentRequest);
@@ -86,9 +86,9 @@ describe('PaymentService', () => {
 
       const paymentRequest: PaymentRequest = {
         orderId: 'order_123',
-        amount: 100.00,
+        amount: 100.0,
         currency: 'MYR',
-        method: PaymentMethod.CURLEC
+        method: PaymentMethod.CURLEC,
       };
 
       const result = await paymentService.createPayment(paymentRequest);
@@ -103,19 +103,19 @@ describe('PaymentService', () => {
       // First create a payment to sync
       const mockCreateResponse = {
         success: true,
-        paymentId: 'pay_test_123'
+        paymentId: 'pay_test_123',
       };
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockCreateResponse
+        json: async () => mockCreateResponse,
       });
 
       const paymentRequest: PaymentRequest = {
         orderId: 'order_123',
-        amount: 100.00,
+        amount: 100.0,
         currency: 'MYR',
-        method: PaymentMethod.CURLEC
+        method: PaymentMethod.CURLEC,
       };
 
       await paymentService.createPayment(paymentRequest);
@@ -123,12 +123,12 @@ describe('PaymentService', () => {
       // Mock the gateway status response
       const mockStatusResponse = {
         id: 'pay_test_123',
-        status: 'completed'
+        status: 'completed',
       };
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: async () => mockStatusResponse
+        json: async () => mockStatusResponse,
       });
 
       const result = await paymentService.syncPaymentStatus('pay_test_123');
@@ -146,9 +146,9 @@ describe('PaymentService', () => {
     it('should reject missing order ID', async () => {
       const invalidRequest: PaymentRequest = {
         orderId: '',
-        amount: 100.00,
+        amount: 100.0,
         currency: 'MYR',
-        method: PaymentMethod.CURLEC
+        method: PaymentMethod.CURLEC,
       };
 
       const result = await paymentService.createPayment(invalidRequest);
@@ -162,7 +162,7 @@ describe('PaymentService', () => {
         orderId: 'order_123',
         amount: 0,
         currency: 'MYR',
-        method: PaymentMethod.CURLEC
+        method: PaymentMethod.CURLEC,
       };
 
       const result = await paymentService.createPayment(invalidRequest);
@@ -174,9 +174,9 @@ describe('PaymentService', () => {
     it('should reject missing currency', async () => {
       const invalidRequest: PaymentRequest = {
         orderId: 'order_123',
-        amount: 100.00,
+        amount: 100.0,
         currency: '',
-        method: PaymentMethod.CURLEC
+        method: PaymentMethod.CURLEC,
       };
 
       const result = await paymentService.createPayment(invalidRequest);
