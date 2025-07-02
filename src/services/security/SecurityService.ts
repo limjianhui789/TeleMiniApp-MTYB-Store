@@ -48,20 +48,20 @@ export class SecurityService {
       encryption: {
         algorithm: 'aes-256-gcm',
         keyLength: 32,
-        ivLength: 16
+        ivLength: 16,
       },
       hashing: {
         saltRounds: 12,
-        algorithm: 'sha256'
+        algorithm: 'sha256',
       },
       rateLimit: {
         windowMs: 60 * 1000, // 1 minute
-        maxRequests: 100
+        maxRequests: 100,
       },
       session: {
         secret: process.env.SESSION_SECRET || crypto.randomBytes(64).toString('hex'),
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-      }
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      },
     };
 
     // Initialize encryption key from environment or generate one
@@ -80,13 +80,13 @@ export class SecurityService {
     try {
       const iv = crypto.randomBytes(this.config.encryption.ivLength);
       const cipher = crypto.createCipher(this.config.encryption.algorithm, this.encryptionKey);
-      
+
       let encrypted = cipher.update(data, 'utf8', 'hex');
       encrypted += cipher.final('hex');
-      
+
       const result: EncryptionResult = {
         encrypted,
-        iv: iv.toString('hex')
+        iv: iv.toString('hex'),
       };
 
       // Add authentication tag for GCM mode
@@ -97,7 +97,7 @@ export class SecurityService {
       return result;
     } catch (error) {
       this.auditSecurityEvent('encryption_failed', 'medium', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw new Error('Encryption failed');
     }
@@ -105,10 +105,7 @@ export class SecurityService {
 
   decrypt(encryptedData: EncryptionResult): string {
     try {
-      const decipher = crypto.createDecipher(
-        this.config.encryption.algorithm,
-        this.encryptionKey
-      );
+      const decipher = crypto.createDecipher(this.config.encryption.algorithm, this.encryptionKey);
 
       // Set auth tag for GCM mode
       if (encryptedData.tag && this.config.encryption.algorithm.includes('gcm')) {
@@ -121,7 +118,7 @@ export class SecurityService {
       return decrypted;
     } catch (error) {
       this.auditSecurityEvent('decryption_failed', 'medium', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw new Error('Decryption failed');
     }
@@ -134,7 +131,7 @@ export class SecurityService {
       return await bcrypt.hash(password, salt);
     } catch (error) {
       this.auditSecurityEvent('password_hashing_failed', 'high', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw new Error('Password hashing failed');
     }
@@ -145,7 +142,7 @@ export class SecurityService {
       return await bcrypt.compare(password, hashedPassword);
     } catch (error) {
       this.auditSecurityEvent('password_verification_failed', 'medium', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
@@ -159,12 +156,12 @@ export class SecurityService {
   generateSecurePassword(length: number = 16): string {
     const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
     let password = '';
-    
+
     for (let i = 0; i < length; i++) {
       const randomIndex = crypto.randomInt(0, charset.length);
       password += charset[randomIndex];
     }
-    
+
     return password;
   }
 
@@ -184,40 +181,47 @@ export class SecurityService {
 
   validatePassword(password: string): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
+
     if (password.length < 8) {
       errors.push('Password must be at least 8 characters long');
     }
-    
+
     if (!/[A-Z]/.test(password)) {
       errors.push('Password must contain at least one uppercase letter');
     }
-    
+
     if (!/[a-z]/.test(password)) {
       errors.push('Password must contain at least one lowercase letter');
     }
-    
+
     if (!/\d/.test(password)) {
       errors.push('Password must contain at least one number');
     }
-    
+
     if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
       errors.push('Password must contain at least one special character');
     }
 
     // Check for common weak passwords
     const commonPasswords = [
-      'password', '123456', 'password123', 'admin', 'qwerty',
-      'letmein', 'welcome', 'monkey', '1234567890'
+      'password',
+      '123456',
+      'password123',
+      'admin',
+      'qwerty',
+      'letmein',
+      'welcome',
+      'monkey',
+      '1234567890',
     ];
-    
+
     if (commonPasswords.includes(password.toLowerCase())) {
       errors.push('Password is too common and easily guessable');
     }
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -226,26 +230,26 @@ export class SecurityService {
     const maxRequests = limit || this.config.rateLimit.maxRequests;
     const window = windowMs || this.config.rateLimit.windowMs;
     const now = Date.now();
-    
+
     const existing = this.rateLimitStore.get(identifier);
-    
+
     if (!existing || now > existing.resetTime) {
       this.rateLimitStore.set(identifier, {
         count: 1,
-        resetTime: now + window
+        resetTime: now + window,
       });
       return true;
     }
-    
+
     if (existing.count >= maxRequests) {
       this.auditSecurityEvent('rate_limit_exceeded', 'medium', {
         identifier,
         attempts: existing.count,
-        limit: maxRequests
+        limit: maxRequests,
       });
       return false;
     }
-    
+
     existing.count++;
     return true;
   }
@@ -272,7 +276,7 @@ export class SecurityService {
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload'
+      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
     };
 
     if (nonce) {
@@ -285,7 +289,7 @@ export class SecurityService {
         "connect-src 'self'",
         "frame-ancestors 'none'",
         "base-uri 'self'",
-        "form-action 'self'"
+        "form-action 'self'",
       ].join('; ');
     }
 
@@ -295,7 +299,7 @@ export class SecurityService {
   // Security scanning
   async scanForMaliciousCode(code: string): Promise<{ safe: boolean; threats: string[] }> {
     const threats: string[] = [];
-    
+
     // Check for dangerous patterns
     const dangerousPatterns = [
       { pattern: /eval\s*\(/gi, threat: 'Dynamic code execution (eval)' },
@@ -310,7 +314,7 @@ export class SecurityService {
       { pattern: /vbscript:/gi, threat: 'VBScript protocol usage' },
       { pattern: /onload\s*=/gi, threat: 'Event handler injection' },
       { pattern: /onerror\s*=/gi, threat: 'Error handler injection' },
-      { pattern: /onclick\s*=/gi, threat: 'Click handler injection' }
+      { pattern: /onclick\s*=/gi, threat: 'Click handler injection' },
     ];
 
     for (const { pattern, threat } of dangerousPatterns) {
@@ -321,8 +325,15 @@ export class SecurityService {
 
     // Check for suspicious keywords
     const suspiciousKeywords = [
-      'document.cookie', 'localStorage', 'sessionStorage', 'XMLHttpRequest',
-      'fetch', 'WebSocket', 'EventSource', 'SharedWorker', 'ServiceWorker'
+      'document.cookie',
+      'localStorage',
+      'sessionStorage',
+      'XMLHttpRequest',
+      'fetch',
+      'WebSocket',
+      'EventSource',
+      'SharedWorker',
+      'ServiceWorker',
     ];
 
     for (const keyword of suspiciousKeywords) {
@@ -332,11 +343,11 @@ export class SecurityService {
     }
 
     const safe = threats.length === 0;
-    
+
     if (!safe) {
       this.auditSecurityEvent('malicious_code_detected', 'critical', {
         threats,
-        codeLength: code.length
+        codeLength: code.length,
       });
     }
 
@@ -353,7 +364,7 @@ export class SecurityService {
       'image/jpeg',
       'image/png',
       'image/gif',
-      'image/webp'
+      'image/webp',
     ];
 
     if (!file) {
@@ -371,9 +382,9 @@ export class SecurityService {
 
     // Check for malicious file names
     const maliciousPatterns = [
-      /\.\./,  // Directory traversal
-      /[<>:"|?*]/,  // Invalid characters
-      /\.(exe|bat|cmd|scr|pif|com)$/i  // Executable extensions
+      /\.\./, // Directory traversal
+      /[<>:"|?*]/, // Invalid characters
+      /\.(exe|bat|cmd|scr|pif|com)$/i, // Executable extensions
     ];
 
     for (const pattern of maliciousPatterns) {
@@ -385,7 +396,7 @@ export class SecurityService {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -402,7 +413,7 @@ export class SecurityService {
       severity,
       details,
       source: 'SecurityService',
-      userId
+      userId,
     };
 
     this.securityAudits.push(audit);
@@ -425,21 +436,19 @@ export class SecurityService {
     limit: number = 100
   ): SecurityAudit[] {
     let audits = this.securityAudits;
-    
+
     if (severity) {
       audits = audits.filter(audit => audit.severity === severity);
     }
-    
-    return audits
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, limit);
+
+    return audits.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, limit);
   }
 
   // IP address validation and security
   validateIPAddress(ip: string): boolean {
     const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
     const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
-    
+
     return ipv4Regex.test(ip) || ipv6Regex.test(ip);
   }
 
@@ -451,7 +460,7 @@ export class SecurityService {
       /^127\./,
       /^::1$/,
       /^fc00:/,
-      /^fe80:/
+      /^fe80:/,
     ];
 
     return privateRanges.some(range => range.test(ip));
@@ -460,7 +469,7 @@ export class SecurityService {
   // Data anonymization
   anonymizeData(data: any, fields: string[]): any {
     const anonymized = { ...data };
-    
+
     for (const field of fields) {
       if (anonymized[field]) {
         if (typeof anonymized[field] === 'string') {
@@ -470,7 +479,7 @@ export class SecurityService {
         }
       }
     }
-    
+
     return anonymized;
   }
 
@@ -500,9 +509,9 @@ export class SecurityService {
   generateSecurityReport(): any {
     const now = new Date();
     const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    
+
     const recentAudits = this.securityAudits.filter(audit => audit.timestamp > last24h);
-    
+
     return {
       timestamp: now,
       auditSummary: {
@@ -510,27 +519,27 @@ export class SecurityService {
         critical: recentAudits.filter(a => a.severity === 'critical').length,
         high: recentAudits.filter(a => a.severity === 'high').length,
         medium: recentAudits.filter(a => a.severity === 'medium').length,
-        low: recentAudits.filter(a => a.severity === 'low').length
+        low: recentAudits.filter(a => a.severity === 'low').length,
       },
       topEvents: this.getTopSecurityEvents(recentAudits),
       rateLimitStats: {
         activeKeys: this.rateLimitStore.size,
-        recentBlocks: recentAudits.filter(a => a.event === 'rate_limit_exceeded').length
+        recentBlocks: recentAudits.filter(a => a.event === 'rate_limit_exceeded').length,
       },
       systemHealth: {
         encryptionWorking: this.testEncryption(),
-        hashingWorking: this.testHashing()
-      }
+        hashingWorking: this.testHashing(),
+      },
     };
   }
 
   private getTopSecurityEvents(audits: SecurityAudit[]): Array<{ event: string; count: number }> {
     const eventCounts = new Map<string, number>();
-    
+
     for (const audit of audits) {
       eventCounts.set(audit.event, (eventCounts.get(audit.event) || 0) + 1);
     }
-    
+
     return Array.from(eventCounts.entries())
       .map(([event, count]) => ({ event, count }))
       .sort((a, b) => b.count - a.count)

@@ -372,7 +372,7 @@ export const PluginManagement: React.FC<PluginManagementProps> = ({
           <p>
             {filterStatus === 'all'
               ? 'No plugin submissions yet.'
-              : `No submissions with status "${getStatusLabel(filterStatus as PluginStoreStatus)}"`}
+              : `No submissions with status "${getStatusLabel(filterStatus)}"`}
           </p>
         </div>
       ) : (

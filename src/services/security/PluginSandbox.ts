@@ -53,15 +53,27 @@ export class PluginSandbox {
     timeout: 30000, // 30 seconds
     maxMemory: 128 * 1024 * 1024, // 128MB
     allowedModules: ['crypto', 'util', 'querystring', 'url'],
-    blockedModules: ['fs', 'child_process', 'cluster', 'dgram', 'dns', 'http', 'https', 'net', 'os', 'process', 'vm'],
+    blockedModules: [
+      'fs',
+      'child_process',
+      'cluster',
+      'dgram',
+      'dns',
+      'http',
+      'https',
+      'net',
+      'os',
+      'process',
+      'vm',
+    ],
     permissions: [],
     resourceLimits: {
       maxCpuTime: 10000, // 10 seconds
       maxMemoryUsage: 64 * 1024 * 1024, // 64MB
       maxNetworkRequests: 100,
       maxFileOperations: 50,
-      maxApiCalls: 200
-    }
+      maxApiCalls: 200,
+    },
   };
 
   async executePlugin(
@@ -73,7 +85,7 @@ export class PluginSandbox {
   ): Promise<PluginExecution> {
     const executionId = crypto.randomUUID();
     const sandboxConfig = { ...this.defaultConfig, ...config, permissions };
-    
+
     const execution: PluginExecution = {
       id: executionId,
       pluginId,
@@ -85,8 +97,8 @@ export class PluginSandbox {
         memoryUsage: 0,
         networkRequests: 0,
         fileOperations: 0,
-        apiCalls: 0
-      }
+        apiCalls: 0,
+      },
     };
 
     this.executions.set(executionId, execution);
@@ -94,25 +106,20 @@ export class PluginSandbox {
     try {
       // Validate plugin code
       await this.validatePluginCode(pluginCode);
-      
+
       // Create secure sandbox environment
       const vm = this.createSecureVM(sandboxConfig, execution);
-      
+
       // Execute plugin with monitoring
-      const result = await this.runWithResourceMonitoring(
-        vm,
-        pluginCode,
-        execution,
-        sandboxConfig
-      );
+      const result = await this.runWithResourceMonitoring(vm, pluginCode, execution, sandboxConfig);
 
       execution.result = result;
       execution.status = 'completed';
       execution.endTime = new Date();
-
     } catch (error) {
       execution.error = error instanceof Error ? error.message : 'Unknown error';
-      execution.status = error instanceof Error && error.message.includes('timeout') ? 'timeout' : 'failed';
+      execution.status =
+        error instanceof Error && error.message.includes('timeout') ? 'timeout' : 'failed';
       execution.endTime = new Date();
     }
 
@@ -135,7 +142,7 @@ export class PluginSandbox {
       /__dirname/,
       /__filename/,
       /Buffer\s*\./,
-      /console\s*\.\s*log/
+      /console\s*\.\s*log/,
     ];
 
     for (const pattern of dangerousPatterns) {
@@ -150,11 +157,7 @@ export class PluginSandbox {
     }
 
     // Check for infinite loops (basic detection)
-    const loopPatterns = [
-      /while\s*\(\s*true\s*\)/,
-      /for\s*\(\s*;\s*;\s*\)/,
-      /while\s*\(\s*1\s*\)/
-    ];
+    const loopPatterns = [/while\s*\(\s*true\s*\)/, /for\s*\(\s*;\s*;\s*\)/, /while\s*\(\s*1\s*\)/];
 
     for (const pattern of loopPatterns) {
       if (pattern.test(code)) {
@@ -169,10 +172,10 @@ export class PluginSandbox {
       sandbox: this.createSandboxContext(config, execution),
       require: {
         external: config.allowedModules,
-        mock: this.createModuleMocks(config, execution)
+        mock: this.createModuleMocks(config, execution),
       },
       eval: false,
-      wasm: false
+      wasm: false,
     });
 
     return vm;
@@ -186,10 +189,10 @@ export class PluginSandbox {
       setInterval: this.createSecureInterval(execution),
       clearTimeout: (id: any) => clearTimeout(id),
       clearInterval: (id: any) => clearInterval(id),
-      
+
       // Plugin API
       PluginAPI: this.createPluginAPI(config, execution),
-      
+
       // Crypto utilities (limited)
       crypto: {
         randomUUID: crypto.randomUUID,
@@ -198,30 +201,33 @@ export class PluginSandbox {
             throw new Error(`Hash algorithm ${algorithm} not allowed`);
           }
           return crypto.createHash(algorithm);
-        }
+        },
       },
 
       // JSON utilities
       JSON: {
         parse: JSON.parse,
-        stringify: JSON.stringify
+        stringify: JSON.stringify,
       },
 
       // Date utilities
       Date: Date,
       Math: Math,
-      
+
       // Array and Object methods
       Array: Array,
       Object: Object,
       String: String,
       Number: Number,
       Boolean: Boolean,
-      RegExp: RegExp
+      RegExp: RegExp,
     };
   }
 
-  private createModuleMocks(config: SandboxConfig, execution: PluginExecution): Record<string, any> {
+  private createModuleMocks(
+    config: SandboxConfig,
+    execution: PluginExecution
+  ): Record<string, any> {
     const mocks: Record<string, any> = {};
 
     // Mock blocked modules to prevent access
@@ -233,7 +239,7 @@ export class PluginSandbox {
 
     // Provide limited HTTP client
     mocks['http-client'] = {
-      request: this.createSecureHttpClient(config, execution)
+      request: this.createSecureHttpClient(config, execution),
     };
 
     return mocks;
@@ -259,7 +265,7 @@ export class PluginSandbox {
           execution.result.errors = [];
         }
         execution.result.errors.push(args.join(' '));
-      }
+      },
     };
   }
 
@@ -268,13 +274,13 @@ export class PluginSandbox {
       if (delay > 10000) {
         throw new Error('Timeout delay cannot exceed 10 seconds');
       }
-      
+
       execution.resourceUsage.cpuTime += delay;
-      
+
       if (execution.resourceUsage.cpuTime > this.defaultConfig.resourceLimits.maxCpuTime) {
         throw new Error('CPU time limit exceeded');
       }
-      
+
       return setTimeout(callback, delay);
     };
   }
@@ -287,7 +293,7 @@ export class PluginSandbox {
       if (delay > 60000) {
         throw new Error('Interval delay cannot exceed 60 seconds');
       }
-      
+
       return setInterval(callback, delay);
     };
   }
@@ -310,7 +316,7 @@ export class PluginSandbox {
           this.checkPermission(config.permissions, 'storage', 'delete', key);
           execution.resourceUsage.apiCalls++;
           return this.deleteStorageValue(execution.pluginId, key);
-        }
+        },
       },
 
       // Network API
@@ -318,13 +324,13 @@ export class PluginSandbox {
         fetch: async (url: string, options?: any) => {
           this.checkPermission(config.permissions, 'network', 'request', url);
           execution.resourceUsage.networkRequests++;
-          
+
           if (execution.resourceUsage.networkRequests > config.resourceLimits.maxNetworkRequests) {
             throw new Error('Network request limit exceeded');
           }
-          
+
           return this.secureNetworkRequest(url, options);
-        }
+        },
       },
 
       // User API
@@ -333,7 +339,7 @@ export class PluginSandbox {
           this.checkPermission(config.permissions, 'api', 'user.read');
           execution.resourceUsage.apiCalls++;
           return this.getCurrentUser(execution.userId);
-        }
+        },
       },
 
       // Platform API
@@ -347,16 +353,22 @@ export class PluginSandbox {
           this.checkPermission(config.permissions, 'api', 'platform.notify');
           execution.resourceUsage.apiCalls++;
           return this.sendNotification(execution.userId, message);
-        }
-      }
+        },
+      },
     };
   }
 
-  private checkPermission(permissions: PluginPermission[], type: string, action: string, resource?: string): void {
-    const hasPermission = permissions.some(permission => 
-      permission.type === type && 
-      permission.action === action &&
-      (!resource || !permission.resource || permission.resource === resource)
+  private checkPermission(
+    permissions: PluginPermission[],
+    type: string,
+    action: string,
+    resource?: string
+  ): void {
+    const hasPermission = permissions.some(
+      permission =>
+        permission.type === type &&
+        permission.action === action &&
+        (!resource || !permission.resource || permission.resource === resource)
     );
 
     if (!hasPermission) {
@@ -390,9 +402,9 @@ export class PluginSandbox {
     try {
       const result = await Promise.race([
         vm.run(code),
-        new Promise((_, reject) => 
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Plugin execution timeout')), config.timeout)
-        )
+        ),
       ]);
 
       return result;
@@ -420,7 +432,7 @@ export class PluginSandbox {
     // Validate URL
     const allowedDomains = ['api.example.com', 'safe-api.com'];
     const urlObj = new URL(url);
-    
+
     if (!allowedDomains.some(domain => urlObj.hostname.endsWith(domain))) {
       throw new Error(`Network requests to ${urlObj.hostname} are not allowed`);
     }
@@ -477,7 +489,7 @@ export class PluginSandbox {
       timeout: filtered.filter(e => e.status === 'timeout').length,
       terminated: filtered.filter(e => e.status === 'terminated').length,
       averageExecutionTime: this.calculateAverageExecutionTime(filtered),
-      totalResourceUsage: this.calculateTotalResourceUsage(filtered)
+      totalResourceUsage: this.calculateTotalResourceUsage(filtered),
     };
   }
 
@@ -485,31 +497,36 @@ export class PluginSandbox {
     const completed = executions.filter(e => e.endTime);
     if (completed.length === 0) return 0;
 
-    const total = completed.reduce((sum, e) => 
-      sum + (e.endTime!.getTime() - e.startTime.getTime()), 0);
+    const total = completed.reduce(
+      (sum, e) => sum + (e.endTime!.getTime() - e.startTime.getTime()),
+      0
+    );
     return total / completed.length;
   }
 
   private calculateTotalResourceUsage(executions: PluginExecution[]): ResourceUsage {
-    return executions.reduce((total, e) => ({
-      cpuTime: total.cpuTime + e.resourceUsage.cpuTime,
-      memoryUsage: total.memoryUsage + e.resourceUsage.memoryUsage,
-      networkRequests: total.networkRequests + e.resourceUsage.networkRequests,
-      fileOperations: total.fileOperations + e.resourceUsage.fileOperations,
-      apiCalls: total.apiCalls + e.resourceUsage.apiCalls
-    }), {
-      cpuTime: 0,
-      memoryUsage: 0,
-      networkRequests: 0,
-      fileOperations: 0,
-      apiCalls: 0
-    });
+    return executions.reduce(
+      (total, e) => ({
+        cpuTime: total.cpuTime + e.resourceUsage.cpuTime,
+        memoryUsage: total.memoryUsage + e.resourceUsage.memoryUsage,
+        networkRequests: total.networkRequests + e.resourceUsage.networkRequests,
+        fileOperations: total.fileOperations + e.resourceUsage.fileOperations,
+        apiCalls: total.apiCalls + e.resourceUsage.apiCalls,
+      }),
+      {
+        cpuTime: 0,
+        memoryUsage: 0,
+        networkRequests: 0,
+        fileOperations: 0,
+        apiCalls: 0,
+      }
+    );
   }
 
   // Cleanup old executions
   cleanup(maxAge: number = 24 * 60 * 60 * 1000): void {
     const cutoff = new Date(Date.now() - maxAge);
-    
+
     for (const [id, execution] of this.executions.entries()) {
       if (execution.startTime < cutoff && execution.status !== 'running') {
         this.executions.delete(id);

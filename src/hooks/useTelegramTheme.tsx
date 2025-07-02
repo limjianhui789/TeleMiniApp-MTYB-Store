@@ -18,7 +18,7 @@ export interface TelegramThemeParams {
   button_color?: string;
   button_text_color?: string;
   secondary_bg_color?: string;
-  
+
   // Extended theme colors
   header_bg_color?: string;
   accent_text_color?: string;
@@ -26,7 +26,7 @@ export interface TelegramThemeParams {
   section_header_text_color?: string;
   subtitle_text_color?: string;
   destructive_text_color?: string;
-  
+
   // Additional properties
   section_separator_color?: string;
   bottom_bar_bg_color?: string;
@@ -94,17 +94,19 @@ const DEFAULT_DARK_THEME: TelegramThemeParams = {
 
 const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
 };
 
 const isLightColor = (color: string): boolean => {
   const rgb = hexToRgb(color);
   if (!rgb) return true;
-  
+
   // Calculate luminance using the relative luminance formula
   const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
   return luminance > 0.6;
@@ -113,29 +115,29 @@ const isLightColor = (color: string): boolean => {
 const adjustColorOpacity = (color: string, opacity: number): string => {
   const rgb = hexToRgb(color);
   if (!rgb) return color;
-  
+
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
 };
 
 const darkenColor = (color: string, amount: number): string => {
   const rgb = hexToRgb(color);
   if (!rgb) return color;
-  
+
   const r = Math.max(0, rgb.r - amount);
   const g = Math.max(0, rgb.g - amount);
   const b = Math.max(0, rgb.b - amount);
-  
+
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 };
 
 const lightenColor = (color: string, amount: number): string => {
   const rgb = hexToRgb(color);
   if (!rgb) return color;
-  
+
   const r = Math.min(255, rgb.r + amount);
   const g = Math.min(255, rgb.g + amount);
   const b = Math.min(255, rgb.b + amount);
-  
+
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 };
 
@@ -147,18 +149,29 @@ const generateColorScheme = (themeParams: TelegramThemeParams): TelegramColorSch
   const bgColor = themeParams.bg_color || DEFAULT_LIGHT_THEME.bg_color!;
   const textColor = themeParams.text_color || DEFAULT_LIGHT_THEME.text_color!;
   const isLight = isLightColor(bgColor);
-  
+
   return {
     name: isLight ? 'light' : 'dark',
     isLight,
-    primary: themeParams.button_color || (isLight ? DEFAULT_LIGHT_THEME.button_color! : DEFAULT_DARK_THEME.button_color!),
+    primary:
+      themeParams.button_color ||
+      (isLight ? DEFAULT_LIGHT_THEME.button_color! : DEFAULT_DARK_THEME.button_color!),
     background: bgColor,
     surface: themeParams.section_bg_color || themeParams.secondary_bg_color || bgColor,
     text: textColor,
-    textSecondary: themeParams.hint_color || (isLight ? DEFAULT_LIGHT_THEME.hint_color! : DEFAULT_DARK_THEME.hint_color!),
+    textSecondary:
+      themeParams.hint_color ||
+      (isLight ? DEFAULT_LIGHT_THEME.hint_color! : DEFAULT_DARK_THEME.hint_color!),
     border: adjustColorOpacity(textColor, 0.15),
-    accent: themeParams.accent_text_color || themeParams.link_color || (isLight ? DEFAULT_LIGHT_THEME.accent_text_color! : DEFAULT_DARK_THEME.accent_text_color!),
-    destructive: themeParams.destructive_text_color || (isLight ? DEFAULT_LIGHT_THEME.destructive_text_color! : DEFAULT_DARK_THEME.destructive_text_color!),
+    accent:
+      themeParams.accent_text_color ||
+      themeParams.link_color ||
+      (isLight ? DEFAULT_LIGHT_THEME.accent_text_color! : DEFAULT_DARK_THEME.accent_text_color!),
+    destructive:
+      themeParams.destructive_text_color ||
+      (isLight
+        ? DEFAULT_LIGHT_THEME.destructive_text_color!
+        : DEFAULT_DARK_THEME.destructive_text_color!),
   };
 };
 
@@ -168,53 +181,59 @@ const generateColorScheme = (themeParams: TelegramThemeParams): TelegramColorSch
 
 const applyCSSVariables = (themeParams: TelegramThemeParams, colorScheme: TelegramColorScheme) => {
   const root = document.documentElement;
-  
+
   // Telegram theme variables
   Object.entries(themeParams).forEach(([key, value]) => {
     if (value) {
       root.style.setProperty(`--tg-theme-${key.replace(/_/g, '-')}`, value);
     }
   });
-  
+
   // Enhanced design system variables
   root.style.setProperty('--color-primary', colorScheme.primary);
   root.style.setProperty('--color-background', colorScheme.background);
   root.style.setProperty('--color-surface', colorScheme.surface);
-  root.style.setProperty('--color-surface-secondary', themeParams.secondary_bg_color || colorScheme.surface);
-  root.style.setProperty('--color-surface-elevated', 
-    colorScheme.isLight 
+  root.style.setProperty(
+    '--color-surface-secondary',
+    themeParams.secondary_bg_color || colorScheme.surface
+  );
+  root.style.setProperty(
+    '--color-surface-elevated',
+    colorScheme.isLight
       ? lightenColor(colorScheme.surface, 10)
       : lightenColor(colorScheme.surface, 15)
   );
-  
+
   root.style.setProperty('--color-text-primary', colorScheme.text);
   root.style.setProperty('--color-text-secondary', colorScheme.textSecondary);
   root.style.setProperty('--color-text-accent', colorScheme.accent);
   root.style.setProperty('--color-text-destructive', colorScheme.destructive);
   root.style.setProperty('--color-text-on-primary', themeParams.button_text_color || '#ffffff');
-  
+
   root.style.setProperty('--color-border', colorScheme.border);
   root.style.setProperty('--color-border-light', adjustColorOpacity(colorScheme.text, 0.08));
   root.style.setProperty('--color-divider', adjustColorOpacity(colorScheme.text, 0.12));
-  
+
   // Interactive states
-  root.style.setProperty('--color-hover', 
-    colorScheme.isLight 
+  root.style.setProperty(
+    '--color-hover',
+    colorScheme.isLight
       ? darkenColor(colorScheme.primary, 20)
       : lightenColor(colorScheme.primary, 20)
   );
-  root.style.setProperty('--color-active', 
-    colorScheme.isLight 
+  root.style.setProperty(
+    '--color-active',
+    colorScheme.isLight
       ? darkenColor(colorScheme.primary, 40)
       : lightenColor(colorScheme.primary, 40)
   );
-  
+
   // Focus ring
   root.style.setProperty('--focus-ring-color', colorScheme.accent);
-  
+
   // Set color scheme for browser features
   root.style.setProperty('color-scheme', colorScheme.isLight ? 'light' : 'dark');
-  
+
   // Update meta theme-color for browser chrome
   updateMetaThemeColor(colorScheme.background);
 };
@@ -243,7 +262,7 @@ export const useTelegramTheme = (): ThemeState => {
 
   const updateTheme = useCallback((params: TelegramThemeParams) => {
     const colorScheme = generateColorScheme(params);
-    
+
     setThemeState(prev => ({
       ...prev,
       themeParams: params,
@@ -251,7 +270,7 @@ export const useTelegramTheme = (): ThemeState => {
       isDark: !colorScheme.isLight,
       isLoading: false,
     }));
-    
+
     applyCSSVariables(params, colorScheme);
   }, []);
 
@@ -279,7 +298,7 @@ export const useTelegramTheme = (): ThemeState => {
     const webApp = window.Telegram?.WebApp;
     if (webApp) {
       webApp.onEvent('themeChanged', handleThemeChanged);
-      
+
       // Cleanup
       return () => {
         webApp.offEvent('themeChanged', handleThemeChanged);
@@ -292,9 +311,9 @@ export const useTelegramTheme = (): ThemeState => {
           handleThemeChanged();
         }
       };
-      
+
       mediaQuery.addEventListener('change', handleSystemThemeChange);
-      
+
       return () => {
         mediaQuery.removeEventListener('change', handleSystemThemeChange);
       };
@@ -330,7 +349,7 @@ export interface TelegramThemeProviderProps {
 
 export const TelegramThemeProvider = ({ children }: TelegramThemeProviderProps) => {
   const themeState = useTelegramTheme();
-  
+
   const updateTheme = useCallback((params: TelegramThemeParams) => {
     const colorScheme = generateColorScheme(params);
     applyCSSVariables(params, colorScheme);
@@ -341,11 +360,7 @@ export const TelegramThemeProvider = ({ children }: TelegramThemeProviderProps) 
     updateTheme,
   };
 
-  return (
-    <TelegramThemeContext.Provider value={value}>
-      {children}
-    </TelegramThemeContext.Provider>
-  );
+  return <TelegramThemeContext.Provider value={value}>{children}</TelegramThemeContext.Provider>;
 };
 
 // ============================================================================

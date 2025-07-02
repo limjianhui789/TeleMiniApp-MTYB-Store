@@ -7,7 +7,11 @@ declare global {
     interface Request {
       user?: User;
       permissions?: {
-        hasPermission: (resource: string, action: string, context?: Partial<PermissionContext>) => boolean;
+        hasPermission: (
+          resource: string,
+          action: string,
+          context?: Partial<PermissionContext>
+        ) => boolean;
         canAccess: (resource: string, context?: Partial<PermissionContext>) => boolean;
         canModify: (resource: string, context?: Partial<PermissionContext>) => boolean;
       };
@@ -32,7 +36,7 @@ export function authenticate(options: AuthMiddlewareOptions = {}) {
         if (required) {
           return res.status(401).json({
             error: 'AUTHENTICATION_REQUIRED',
-            message: 'Authentication token is required'
+            message: 'Authentication token is required',
           });
         }
         return next();
@@ -40,26 +44,23 @@ export function authenticate(options: AuthMiddlewareOptions = {}) {
 
       // Validate token and get user
       const user = await authService.validateToken(token);
-      
+
       // Check role requirements
       if (roles.length > 0 && !roles.includes(user.role)) {
         return res.status(403).json({
           error: 'INSUFFICIENT_ROLE',
-          message: `Required role: ${roles.join(' or ')}, user role: ${user.role}`
+          message: `Required role: ${roles.join(' or ')}, user role: ${user.role}`,
         });
       }
 
       // Check permission requirements
       if (permissions.length > 0) {
-        const hasRequiredPermissions = permissionService.hasAllPermissions(
-          user.role,
-          permissions
-        );
+        const hasRequiredPermissions = permissionService.hasAllPermissions(user.role, permissions);
 
         if (!hasRequiredPermissions) {
           return res.status(403).json({
             error: 'INSUFFICIENT_PERMISSIONS',
-            message: 'User does not have required permissions'
+            message: 'User does not have required permissions',
           });
         }
       }
@@ -73,7 +74,7 @@ export function authenticate(options: AuthMiddlewareOptions = {}) {
       if (required) {
         return res.status(401).json({
           error: 'INVALID_TOKEN',
-          message: error instanceof Error ? error.message : 'Invalid authentication token'
+          message: error instanceof Error ? error.message : 'Invalid authentication token',
         });
       }
       next();
@@ -90,16 +91,16 @@ export function requireRole(...roles: UserRole[]) {
 }
 
 export function requirePermission(resource: string, action: string) {
-  return authenticate({ 
-    required: true, 
-    permissions: [{ resource, action }] 
+  return authenticate({
+    required: true,
+    permissions: [{ resource, action }],
   });
 }
 
 export function requirePermissions(...permissions: Array<{ resource: string; action: string }>) {
-  return authenticate({ 
-    required: true, 
-    permissions 
+  return authenticate({
+    required: true,
+    permissions,
   });
 }
 
@@ -112,22 +113,17 @@ export function checkPermission(resource: string, action: string) {
     if (!req.user) {
       return res.status(401).json({
         error: 'AUTHENTICATION_REQUIRED',
-        message: 'Authentication is required for this action'
+        message: 'Authentication is required for this action',
       });
     }
 
     const context = createPermissionContext(req);
-    const hasPermission = permissionService.hasPermission(
-      req.user.role,
-      resource,
-      action,
-      context
-    );
+    const hasPermission = permissionService.hasPermission(req.user.role, resource, action, context);
 
     if (!hasPermission) {
       return res.status(403).json({
         error: 'PERMISSION_DENIED',
-        message: `Permission denied for ${action} on ${resource}`
+        message: `Permission denied for ${action} on ${resource}`,
       });
     }
 
@@ -135,12 +131,15 @@ export function checkPermission(resource: string, action: string) {
   };
 }
 
-export function checkResourceOwnership(resourceIdParam: string = 'id', ownerField: string = 'authorId') {
+export function checkResourceOwnership(
+  resourceIdParam: string = 'id',
+  ownerField: string = 'authorId'
+) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({
         error: 'AUTHENTICATION_REQUIRED',
-        message: 'Authentication is required for this action'
+        message: 'Authentication is required for this action',
       });
     }
 
@@ -148,7 +147,7 @@ export function checkResourceOwnership(resourceIdParam: string = 'id', ownerFiel
     if (!resourceId) {
       return res.status(400).json({
         error: 'MISSING_RESOURCE_ID',
-        message: `Resource ID parameter '${resourceIdParam}' is required`
+        message: `Resource ID parameter '${resourceIdParam}' is required`,
       });
     }
 
@@ -161,7 +160,7 @@ export function checkResourceOwnership(resourceIdParam: string = 'id', ownerFiel
 
     return res.status(403).json({
       error: 'ACCESS_DENIED',
-      message: 'You do not have permission to access this resource'
+      message: 'You do not have permission to access this resource',
     });
   };
 }
@@ -185,7 +184,7 @@ export function rateLimitByUser(
     if (!userLimit || now > userLimit.resetTime) {
       userRequestCounts.set(userId, {
         count: 1,
-        resetTime: now + windowMs
+        resetTime: now + windowMs,
       });
       return next();
     }
@@ -194,7 +193,7 @@ export function rateLimitByUser(
       return res.status(429).json({
         error: 'RATE_LIMIT_EXCEEDED',
         message,
-        retryAfter: Math.ceil((userLimit.resetTime - now) / 1000)
+        retryAfter: Math.ceil((userLimit.resetTime - now) / 1000),
       });
     }
 
@@ -206,11 +205,11 @@ export function rateLimitByUser(
 export function validateTelegramWebApp() {
   return (req: Request, res: Response, next: NextFunction) => {
     const initData = req.headers['x-telegram-web-app-init-data'] as string;
-    
+
     if (!initData) {
       return res.status(400).json({
         error: 'MISSING_TELEGRAM_DATA',
-        message: 'Telegram Web App initialization data is required'
+        message: 'Telegram Web App initialization data is required',
       });
     }
 
@@ -240,7 +239,7 @@ export function validateTelegramWebApp() {
     } catch (error) {
       return res.status(400).json({
         error: 'INVALID_TELEGRAM_DATA',
-        message: 'Invalid Telegram Web App data'
+        message: 'Invalid Telegram Web App data',
       });
     }
   };
@@ -249,8 +248,8 @@ export function validateTelegramWebApp() {
 export function auditLog(action: string, resourceType?: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     const originalSend = res.send;
-    
-    res.send = function(data) {
+
+    res.send = function (data) {
       // Log the action after successful response
       if (res.statusCode < 400) {
         logAuditEvent({
@@ -263,10 +262,10 @@ export function auditLog(action: string, resourceType?: string) {
           method: req.method,
           path: req.path,
           statusCode: res.statusCode,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
-      
+
       return originalSend.call(this, data);
     };
 
@@ -276,7 +275,7 @@ export function auditLog(action: string, resourceType?: string) {
 
 function extractToken(req: Request): string | null {
   const authHeader = req.headers.authorization;
-  
+
   if (authHeader && authHeader.startsWith('Bearer ')) {
     return authHeader.substring(7);
   }
@@ -292,31 +291,19 @@ function extractToken(req: Request): string | null {
 function createPermissionHelpers(user: User) {
   return {
     hasPermission: (resource: string, action: string, context?: Partial<PermissionContext>) => {
-      const fullContext = permissionService.createPermissionContext(
-        user.id,
-        user.role,
-        context
-      );
+      const fullContext = permissionService.createPermissionContext(user.id, user.role, context);
       return permissionService.hasPermission(user.role, resource, action, fullContext);
     },
-    
+
     canAccess: (resource: string, context?: Partial<PermissionContext>) => {
-      const fullContext = permissionService.createPermissionContext(
-        user.id,
-        user.role,
-        context
-      );
+      const fullContext = permissionService.createPermissionContext(user.id, user.role, context);
       return permissionService.canAccessResource(user.role, resource, fullContext);
     },
-    
+
     canModify: (resource: string, context?: Partial<PermissionContext>) => {
-      const fullContext = permissionService.createPermissionContext(
-        user.id,
-        user.role,
-        context
-      );
+      const fullContext = permissionService.createPermissionContext(user.id, user.role, context);
       return permissionService.canModifyResource(user.role, resource, fullContext);
-    }
+    },
   };
 }
 
@@ -330,8 +317,8 @@ function createPermissionContext(req: Request): PermissionContext | undefined {
       ...req.body,
       ...req.query,
       method: req.method,
-      path: req.path
-    }
+      path: req.path,
+    },
   });
 }
 

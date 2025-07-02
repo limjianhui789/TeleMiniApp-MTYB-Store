@@ -14,20 +14,20 @@ export const databaseConfig: PoolConfig = {
   idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'),
   connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT || '10000'),
   statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT || '30000'),
-  query_timeout: parseInt(process.env.DB_QUERY_TIMEOUT || '30000')
+  query_timeout: parseInt(process.env.DB_QUERY_TIMEOUT || '30000'),
 };
 
 // Create PostgreSQL connection pool
 export const pool = new Pool(databaseConfig);
 
 // Handle pool errors
-pool.on('error', (err) => {
+pool.on('error', err => {
   console.error('PostgreSQL pool error:', err);
 });
 
-pool.on('connect', (client) => {
+pool.on('connect', client => {
   console.log('New PostgreSQL client connected');
-  
+
   // Set timezone and other session settings
   client.query('SET timezone = "UTC"');
   client.query('SET statement_timeout = "30s"');
@@ -37,14 +37,16 @@ pool.on('connect', (client) => {
 const prismaConfig = {
   datasources: {
     db: {
-      url: process.env.DATABASE_URL || 
-           `postgresql://${databaseConfig.user}:${databaseConfig.password}@${databaseConfig.host}:${databaseConfig.port}/${databaseConfig.database}?schema=public`
-    }
+      url:
+        process.env.DATABASE_URL ||
+        `postgresql://${databaseConfig.user}:${databaseConfig.password}@${databaseConfig.host}:${databaseConfig.port}/${databaseConfig.database}?schema=public`,
+    },
   },
-  log: process.env.NODE_ENV === 'development' 
-    ? ['query', 'info', 'warn', 'error'] as const
-    : ['error'] as const,
-  errorFormat: 'pretty' as const
+  log:
+    process.env.NODE_ENV === 'development'
+      ? (['query', 'info', 'warn', 'error'] as const)
+      : (['error'] as const),
+  errorFormat: 'pretty' as const,
 };
 
 // Create Prisma client instance
@@ -103,7 +105,7 @@ export class DatabaseConnection {
   async healthCheck(): Promise<{ postgres: boolean; prisma: boolean }> {
     const result = {
       postgres: false,
-      prisma: false
+      prisma: false,
     };
 
     try {
@@ -133,11 +135,9 @@ export class DatabaseConnection {
 }
 
 // Transaction utilities
-export async function withTransaction<T>(
-  callback: (client: any) => Promise<T>
-): Promise<T> {
+export async function withTransaction<T>(callback: (client: any) => Promise<T>): Promise<T> {
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
     const result = await callback(client);
@@ -162,23 +162,23 @@ export class MigrationManager {
   async runMigrations(): Promise<void> {
     try {
       console.log('🔄 Running database migrations...');
-      
+
       // Check if migrations table exists
       await this.ensureMigrationsTable();
-      
+
       // Get applied migrations
       const appliedMigrations = await this.getAppliedMigrations();
-      
+
       // Get available migration files
       const availableMigrations = await this.getAvailableMigrations();
-      
+
       // Run pending migrations
       for (const migration of availableMigrations) {
         if (!appliedMigrations.includes(migration.name)) {
           await this.runMigration(migration);
         }
       }
-      
+
       console.log('✅ Database migrations completed successfully');
     } catch (error) {
       console.error('❌ Migration failed:', error);
@@ -194,7 +194,7 @@ export class MigrationManager {
         applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
     `;
-    
+
     const client = await pool.connect();
     try {
       await client.query(query);
@@ -220,18 +220,15 @@ export class MigrationManager {
   }
 
   private async runMigration(migration: { name: string; sql: string }): Promise<void> {
-    await withTransaction(async (client) => {
+    await withTransaction(async client => {
       console.log(`🔄 Running migration: ${migration.name}`);
-      
+
       // Execute migration SQL
       await client.query(migration.sql);
-      
+
       // Record migration as applied
-      await client.query(
-        'INSERT INTO migrations (name) VALUES ($1)',
-        [migration.name]
-      );
-      
+      await client.query('INSERT INTO migrations (name) VALUES ($1)', [migration.name]);
+
       console.log(`✅ Migration completed: ${migration.name}`);
     });
   }
@@ -242,19 +239,19 @@ export class DatabaseSeeder {
   async seed(): Promise<void> {
     try {
       console.log('🌱 Seeding database...');
-      
+
       // Check if database is already seeded
       const userCount = await prisma.user.count();
       if (userCount > 0) {
         console.log('ℹ️ Database already contains data, skipping seed');
         return;
       }
-      
+
       // Run seed data
       await this.seedUsers();
       await this.seedPlugins();
       await this.seedReviews();
-      
+
       console.log('✅ Database seeding completed successfully');
     } catch (error) {
       console.error('❌ Database seeding failed:', error);
@@ -272,7 +269,7 @@ export class DatabaseSeeder {
         email: 'admin@mtyb.shop',
         role: 'admin' as const,
         status: 'active' as const,
-        emailVerified: true
+        emailVerified: true,
       },
       {
         telegramId: BigInt(234567890),
@@ -282,23 +279,23 @@ export class DatabaseSeeder {
         email: 'john@developer.com',
         role: 'developer' as const,
         status: 'active' as const,
-        emailVerified: true
-      }
+        emailVerified: true,
+      },
     ];
 
     for (const userData of users) {
       await prisma.user.create({
-        data: userData
+        data: userData,
       });
     }
-    
+
     console.log(`✅ Seeded ${users.length} users`);
   }
 
   private async seedPlugins(): Promise<void> {
     // Get developer user
     const developer = await prisma.user.findFirst({
-      where: { role: 'developer' }
+      where: { role: 'developer' },
     });
 
     if (!developer) {
@@ -311,7 +308,8 @@ export class DatabaseSeeder {
         name: 'vpn-premium-pro',
         displayName: 'VPN Premium Pro',
         shortDescription: '企业级VPN服务，支持全球100+服务器节点',
-        description: '企业级VPN服务，支持全球100+服务器节点，军用级加密，提供最高级别的网络安全保护。',
+        description:
+          '企业级VPN服务，支持全球100+服务器节点，军用级加密，提供最高级别的网络安全保护。',
         authorId: developer.id,
         category: 'vpn' as const,
         tags: ['vpn', 'security', 'premium'],
@@ -323,16 +321,16 @@ export class DatabaseSeeder {
         ratingAverage: 4.8,
         ratingCount: 157,
         downloadCount: 2547,
-        activeInstallCount: 1847
-      }
+        activeInstallCount: 1847,
+      },
     ];
 
     for (const pluginData of plugins) {
       await prisma.plugin.create({
-        data: pluginData
+        data: pluginData,
       });
     }
-    
+
     console.log(`✅ Seeded ${plugins.length} plugins`);
   }
 

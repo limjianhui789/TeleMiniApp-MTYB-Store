@@ -9,15 +9,15 @@ export function securityHeaders() {
   return (req: Request, res: Response, next: NextFunction) => {
     const nonce = securityService.generateCSPNonce();
     const headers = securityService.getSecurityHeaders(nonce);
-    
+
     // Set all security headers
     Object.entries(headers).forEach(([key, value]) => {
       res.setHeader(key, value);
     });
-    
+
     // Make nonce available for templates
     res.locals.nonce = nonce;
-    
+
     next();
   };
 }
@@ -29,11 +29,11 @@ export const createRateLimit = (options: {
   message?: string;
   keyGenerator?: (req: Request) => string;
 }) => {
-  const { 
+  const {
     windowMs = 15 * 60 * 1000, // 15 minutes
-    max = 100, 
+    max = 100,
     message = 'Too many requests',
-    keyGenerator = (req) => req.ip
+    keyGenerator = req => req.ip,
   } = options;
 
   return rateLimit({
@@ -42,7 +42,7 @@ export const createRateLimit = (options: {
     message: {
       error: 'RATE_LIMIT_EXCEEDED',
       message,
-      retryAfter: windowMs / 1000
+      retryAfter: windowMs / 1000,
     },
     keyGenerator,
     standardHeaders: true,
@@ -52,15 +52,15 @@ export const createRateLimit = (options: {
         ip: req.ip,
         userAgent: req.get('User-Agent'),
         endpoint: req.path,
-        method: req.method
+        method: req.method,
       });
-      
+
       res.status(429).json({
         error: 'RATE_LIMIT_EXCEEDED',
         message,
-        retryAfter: Math.ceil(windowMs / 1000)
+        retryAfter: Math.ceil(windowMs / 1000),
       });
-    }
+    },
   });
 };
 
@@ -68,40 +68,40 @@ export const createRateLimit = (options: {
 export const authRateLimit = createRateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 attempts per window
-  message: 'Too many authentication attempts, please try again later'
+  message: 'Too many authentication attempts, please try again later',
 });
 
 export const apiRateLimit = createRateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 1000, // 1000 requests per window
-  message: 'Too many API requests, please slow down'
+  message: 'Too many API requests, please slow down',
 });
 
 export const uploadRateLimit = createRateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10, // 10 uploads per hour
-  message: 'Too many file uploads, please try again later'
+  message: 'Too many file uploads, please try again later',
 });
 
 // User-based rate limiting
 export const userRateLimit = (maxRequests: number = 100, windowMs: number = 60 * 1000) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?.id || req.ip;
-    
+
     if (!securityService.checkRateLimit(userId, maxRequests, windowMs)) {
       securityService.auditSecurityEvent('user_rate_limit_exceeded', 'medium', {
         userId: req.user?.id,
         ip: req.ip,
-        endpoint: req.path
+        endpoint: req.path,
       });
-      
+
       return res.status(429).json({
         error: 'RATE_LIMIT_EXCEEDED',
         message: 'Too many requests from this user',
-        retryAfter: Math.ceil(windowMs / 1000)
+        retryAfter: Math.ceil(windowMs / 1000),
       });
     }
-    
+
     next();
   };
 };
@@ -113,12 +113,12 @@ export function sanitizeInput() {
     if (req.body && typeof req.body === 'object') {
       req.body = sanitizeObject(req.body);
     }
-    
+
     // Sanitize query parameters
     if (req.query && typeof req.query === 'object') {
       req.query = sanitizeObject(req.query);
     }
-    
+
     next();
   };
 }
@@ -127,11 +127,11 @@ function sanitizeObject(obj: any): any {
   if (typeof obj === 'string') {
     return securityService.sanitizeInput(obj);
   }
-  
+
   if (Array.isArray(obj)) {
     return obj.map(sanitizeObject);
   }
-  
+
   if (obj && typeof obj === 'object') {
     const sanitized: any = {};
     for (const [key, value] of Object.entries(obj)) {
@@ -139,7 +139,7 @@ function sanitizeObject(obj: any): any {
     }
     return sanitized;
   }
-  
+
   return obj;
 }
 
@@ -149,24 +149,24 @@ export function csrfProtection() {
     if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
       return next();
     }
-    
-    const token = req.headers['x-csrf-token'] as string || req.body._csrf;
+
+    const token = (req.headers['x-csrf-token'] as string) || req.body._csrf;
     const sessionToken = req.headers.authorization?.substring(7) || '';
-    
+
     if (!token || !securityService.validateCSRFToken(token, sessionToken)) {
       securityService.auditSecurityEvent('csrf_validation_failed', 'high', {
         ip: req.ip,
         userAgent: req.get('User-Agent'),
         endpoint: req.path,
-        hasToken: !!token
+        hasToken: !!token,
       });
-      
+
       return res.status(403).json({
         error: 'CSRF_TOKEN_INVALID',
-        message: 'CSRF token is missing or invalid'
+        message: 'CSRF token is missing or invalid',
       });
     }
-    
+
     next();
   };
 }
@@ -177,12 +177,12 @@ export function secureFileUpload() {
     if (!req.file && !req.files) {
       return next();
     }
-    
+
     const files = req.files ? (Array.isArray(req.files) ? req.files : [req.files]) : [req.file];
-    
+
     for (const file of files) {
       if (!file) continue;
-      
+
       const validation = securityService.validateFileUpload(file);
       if (!validation.valid) {
         securityService.auditSecurityEvent('malicious_file_upload', 'high', {
@@ -191,17 +191,17 @@ export function secureFileUpload() {
           mimeType: file.mimetype,
           errors: validation.errors,
           userId: req.user?.id,
-          ip: req.ip
+          ip: req.ip,
         });
-        
+
         return res.status(400).json({
           error: 'FILE_VALIDATION_FAILED',
           message: 'File validation failed',
-          details: validation.errors
+          details: validation.errors,
         });
       }
     }
-    
+
     next();
   };
 }
@@ -210,29 +210,29 @@ export function secureFileUpload() {
 export function scanPluginCode() {
   return async (req: Request, res: Response, next: NextFunction) => {
     const code = req.body.code || req.body.source;
-    
+
     if (!code || typeof code !== 'string') {
       return next();
     }
-    
+
     try {
       const scanResult = await securityService.scanForMaliciousCode(code);
-      
+
       if (!scanResult.safe) {
         securityService.auditSecurityEvent('malicious_plugin_code', 'critical', {
           threats: scanResult.threats,
           codeLength: code.length,
           userId: req.user?.id,
-          ip: req.ip
+          ip: req.ip,
         });
-        
+
         return res.status(400).json({
           error: 'MALICIOUS_CODE_DETECTED',
           message: 'Plugin code contains potentially malicious patterns',
-          threats: scanResult.threats
+          threats: scanResult.threats,
         });
       }
-      
+
       next();
     } catch (error) {
       console.error('Code scanning error:', error);
@@ -245,70 +245,71 @@ export function scanPluginCode() {
 export function ipSecurity() {
   const blockedIPs = new Set<string>();
   const suspiciousIPs = new Map<string, { count: number; lastSeen: Date }>();
-  
+
   return (req: Request, res: Response, next: NextFunction) => {
     const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
-    
+
     // Check if IP is blocked
     if (blockedIPs.has(clientIP)) {
       securityService.auditSecurityEvent('blocked_ip_access', 'high', {
         ip: clientIP,
         userAgent: req.get('User-Agent'),
-        endpoint: req.path
+        endpoint: req.path,
       });
-      
+
       return res.status(403).json({
         error: 'IP_BLOCKED',
-        message: 'Access denied from this IP address'
+        message: 'Access denied from this IP address',
       });
     }
-    
+
     // Track suspicious activity
     const suspicious = suspiciousIPs.get(clientIP);
     if (suspicious) {
       suspicious.count++;
       suspicious.lastSeen = new Date();
-      
+
       // Block IP if too many suspicious activities
       if (suspicious.count > 10) {
         blockedIPs.add(clientIP);
         securityService.auditSecurityEvent('ip_auto_blocked', 'high', {
           ip: clientIP,
-          suspiciousCount: suspicious.count
+          suspiciousCount: suspicious.count,
         });
       }
     }
-    
+
     // Validate IP format
     if (!securityService.validateIPAddress(clientIP)) {
       securityService.auditSecurityEvent('invalid_ip_format', 'medium', {
-        ip: clientIP
+        ip: clientIP,
       });
     }
-    
+
     next();
   };
 }
 
 // Request size limiting
-export function requestSizeLimit(maxSize: number = 10 * 1024 * 1024) { // 10MB default
+export function requestSizeLimit(maxSize: number = 10 * 1024 * 1024) {
+  // 10MB default
   return (req: Request, res: Response, next: NextFunction) => {
     const contentLength = parseInt(req.get('Content-Length') || '0');
-    
+
     if (contentLength > maxSize) {
       securityService.auditSecurityEvent('request_size_exceeded', 'medium', {
         contentLength,
         maxSize,
         endpoint: req.path,
-        ip: req.ip
+        ip: req.ip,
       });
-      
+
       return res.status(413).json({
         error: 'REQUEST_TOO_LARGE',
-        message: `Request size exceeds maximum limit of ${maxSize / (1024 * 1024)}MB`
+        message: `Request size exceeds maximum limit of ${maxSize / (1024 * 1024)}MB`,
       });
     }
-    
+
     next();
   };
 }
@@ -317,22 +318,22 @@ export function requestSizeLimit(maxSize: number = 10 * 1024 * 1024) { // 10MB d
 export function securityMonitoring() {
   return (req: Request, res: Response, next: NextFunction) => {
     const startTime = Date.now();
-    
+
     // Log suspicious patterns
     const suspiciousPatterns = [
-      /\.\./,  // Directory traversal
-      /<script/i,  // XSS attempts
-      /union.*select/i,  // SQL injection
-      /javascript:/i,  // JavaScript injection
-      /eval\(/i,  // Code injection
-      /__proto__/,  // Prototype pollution
-      /constructor/  // Constructor access
+      /\.\./, // Directory traversal
+      /<script/i, // XSS attempts
+      /union.*select/i, // SQL injection
+      /javascript:/i, // JavaScript injection
+      /eval\(/i, // Code injection
+      /__proto__/, // Prototype pollution
+      /constructor/, // Constructor access
     ];
-    
+
     const userAgent = req.get('User-Agent') || '';
     const queryString = req.url;
     const bodyString = JSON.stringify(req.body || {});
-    
+
     for (const pattern of suspiciousPatterns) {
       if (pattern.test(queryString) || pattern.test(bodyString) || pattern.test(userAgent)) {
         securityService.auditSecurityEvent('suspicious_request_pattern', 'high', {
@@ -340,26 +341,27 @@ export function securityMonitoring() {
           ip: req.ip,
           userAgent,
           endpoint: req.path,
-          method: req.method
+          method: req.method,
         });
         break;
       }
     }
-    
+
     // Monitor response for errors
     const originalSend = res.send;
-    res.send = function(data) {
+    res.send = function (data) {
       const responseTime = Date.now() - startTime;
-      
+
       // Log slow requests
-      if (responseTime > 5000) { // 5 seconds
+      if (responseTime > 5000) {
+        // 5 seconds
         securityService.auditSecurityEvent('slow_request', 'low', {
           responseTime,
           endpoint: req.path,
-          method: req.method
+          method: req.method,
         });
       }
-      
+
       // Log errors
       if (res.statusCode >= 400) {
         securityService.auditSecurityEvent('error_response', 'medium', {
@@ -367,13 +369,13 @@ export function securityMonitoring() {
           endpoint: req.path,
           method: req.method,
           ip: req.ip,
-          responseTime
+          responseTime,
         });
       }
-      
+
       return originalSend.call(this, data);
     };
-    
+
     next();
   };
 }
@@ -390,20 +392,23 @@ export function securePluginExecution() {
         maxMemoryUsage: 64 * 1024 * 1024,
         maxNetworkRequests: 50,
         maxFileOperations: 25,
-        maxApiCalls: 100
-      }
+        maxApiCalls: 100,
+      },
     };
-    
+
     next();
   };
 }
 
 // Security cleanup middleware (should run periodically)
 export function securityCleanup() {
-  setInterval(() => {
-    securityService.cleanupExpiredTokens();
-  }, 60 * 60 * 1000); // Every hour
-  
+  setInterval(
+    () => {
+      securityService.cleanupExpiredTokens();
+    },
+    60 * 60 * 1000
+  ); // Every hour
+
   return (req: Request, res: Response, next: NextFunction) => {
     next();
   };
@@ -414,11 +419,11 @@ export const helmetConfig = helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://telegram.org"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://telegram.org'],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      imgSrc: ["'self'", 'data:', 'https:'],
       fontSrc: ["'self'"],
-      connectSrc: ["'self'", "https://api.telegram.org"],
+      connectSrc: ["'self'", 'https://api.telegram.org'],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
@@ -430,12 +435,12 @@ export const helmetConfig = helmet({
   hsts: {
     maxAge: 31536000,
     includeSubDomains: true,
-    preload: true
+    preload: true,
   },
   noSniff: true,
   frameguard: { action: 'deny' },
   xssFilter: true,
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 });
 
 // Export all security middleware as a combined function
@@ -446,7 +451,7 @@ export function applySecurity() {
     ipSecurity(),
     sanitizeInput(),
     securityMonitoring(),
-    securityCleanup()
+    securityCleanup(),
   ];
 }
 

@@ -210,7 +210,7 @@ export class ProductService {
   async getProduct(id: string): Promise<ApiResponse<Product>> {
     try {
       const product = await this.getProductById(id);
-      
+
       if (!product) {
         return {
           success: false,
