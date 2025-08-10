@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { CartState, CartItem } from '../../types';
 import { cartService } from '../../services/product/CartService';
 import { Button } from '../ui/Button';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
 interface CartPageProps {
-  onCheckout?: (items: CartItem[]) => void;
   onContinueShopping?: () => void;
   onProductClick?: (productId: string) => void;
   className?: string;
 }
 
 export const CartPage: React.FC<CartPageProps> = ({
-  onCheckout,
   onContinueShopping,
   onProductClick,
   className = '',
 }) => {
+  const navigate = useNavigate();
   const [cartState, setCartState] = useState<CartState>({
     items: [],
     total: 0,
@@ -124,9 +124,25 @@ export const CartPage: React.FC<CartPageProps> = ({
     }
   };
 
-  const handleCheckout = () => {
-    if (onCheckout) {
-      onCheckout(cartState.items);
+  const handleCheckout = async () => {
+    try {
+      // Validate cart before proceeding
+      const validation = await cartService.validateCartAdvanced();
+      
+      if (!validation.isValid) {
+        setError(validation.errors.join('\n'));
+        return;
+      }
+      
+      if (validation.warnings.length > 0) {
+        // Show warnings but allow to proceed
+        console.warn('Cart validation warnings:', validation.warnings);
+      }
+      
+      navigate('/checkout');
+    } catch (err) {
+      setError('Failed to validate cart');
+      console.error('Error validating cart:', err);
     }
   };
 
@@ -324,8 +340,13 @@ export const CartPage: React.FC<CartPageProps> = ({
             )}
 
             <div className="cart-page__checkout-actions">
-              <Button onClick={handleCheckout} size="lg" className="cart-page__checkout-btn">
-                Proceed to Checkout
+              <Button 
+                onClick={handleCheckout} 
+                size="lg" 
+                className="cart-page__checkout-btn"
+                disabled={isEmpty || cartState.items.some(item => !item.product.isActive)}
+              >
+                {isEmpty ? 'Cart is Empty' : cartState.items.some(item => !item.product.isActive) ? 'Check Availability' : 'Proceed to Checkout'}
               </Button>
 
               {onContinueShopping && (

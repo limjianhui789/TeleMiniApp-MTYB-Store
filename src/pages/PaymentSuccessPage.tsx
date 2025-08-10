@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PaymentStatus } from '../components/payment/PaymentStatus';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { cartService } from '../services/product/CartService';
 
 export const PaymentSuccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -50,9 +51,14 @@ export const PaymentSuccessPage: React.FC = () => {
           <PaymentStatus
             paymentId={paymentId}
             orderId={orderId || undefined}
-            onSuccess={() => {
-              // Payment completed successfully
-              console.log('Payment completed successfully');
+            onSuccess={async () => {
+              // Payment completed successfully - clear the cart
+              try {
+                await cartService.clearCart();
+                console.log('Payment completed successfully and cart cleared');
+              } catch (error) {
+                console.error('Failed to clear cart after successful payment:', error);
+              }
             }}
             onFailure={() => {
               // Payment failed

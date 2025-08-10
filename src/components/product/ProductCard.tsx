@@ -2,11 +2,12 @@ import React from 'react';
 import type { Product } from '../../types';
 import { categoryService } from '../../services/product';
 import { Button } from '../ui/Button';
-import { useTelegramTheme } from '../../hooks/useTelegramTheme';
 
 interface ProductCardProps {
   product: Product;
   onAddToCart?: (productId: string) => void;
+  onRemoveFromCart?: (productId: string) => void;
+  onViewCart?: () => void;
   onViewDetails?: (productId: string) => void;
   showAddToCart?: boolean;
   isInCart?: boolean;
@@ -16,12 +17,13 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onAddToCart,
+  onRemoveFromCart: _onRemoveFromCart,
+  onViewCart,
   onViewDetails,
   showAddToCart = true,
   isInCart = false,
   className = '',
 }) => {
-  const { colorScheme } = useTelegramTheme();
   const categoryInfo = categoryService.getCategoryBadgeProps(product.category);
   const hasDiscount = product.originalPrice && product.originalPrice > product.price;
   const discountPercentage = hasDiscount
@@ -32,8 +34,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onAddToCart && !isOutOfStock) {
-      onAddToCart(product.id);
+    if (!isOutOfStock) {
+      if (isInCart && onViewCart) {
+        onViewCart();
+      } else if (!isInCart && onAddToCart) {
+        onAddToCart(product.id);
+      }
     }
   };
 
@@ -153,7 +159,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 disabled={isOutOfStock}
                 className="product-card__add-to-cart"
               >
-                {isOutOfStock ? 'Out of Stock' : isInCart ? 'In Cart' : 'Add to Cart'}
+                {isOutOfStock ? 'Out of Stock' : isInCart ? 'View Cart' : 'Add to Cart'}
               </Button>
             </div>
           )}

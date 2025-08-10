@@ -3,6 +3,7 @@
 // ============================================================================
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   cartService,
   type EnhancedCartItem,
@@ -18,7 +19,6 @@ import { useTelegramTheme } from '../../hooks/useTelegramTheme';
 // ============================================================================
 
 interface CartPageEnhancedProps {
-  onCheckout?: () => void;
   onContinueShopping?: () => void;
   onProductClick?: (productId: string) => void;
 }
@@ -196,11 +196,11 @@ const CartItemComponent: React.FC<CartItemComponentProps> = React.memo(
 // ============================================================================
 
 export const CartPageEnhanced: React.FC<CartPageEnhancedProps> = ({
-  onCheckout,
   onContinueShopping,
   onProductClick,
 }) => {
   const { colorScheme } = useTelegramTheme();
+  const navigate = useNavigate();
   // ============================================================================
   // State Management
   // ============================================================================
@@ -418,11 +418,31 @@ export const CartPageEnhanced: React.FC<CartPageEnhancedProps> = ({
         <div className="checkout-actions">
           <Button
             variant="primary"
-            onClick={onCheckout}
+            onClick={async () => {
+              try {
+                // Validate cart before proceeding
+                const validation = await cartService.validateCartAdvanced();
+                
+                if (!validation.isValid) {
+                  setError(validation.errors.join('\n'));
+                  return;
+                }
+                
+                if (validation.warnings.length > 0) {
+                  // Show warnings but allow to proceed
+                  console.warn('Cart validation warnings:', validation.warnings);
+                }
+                
+                navigate('/checkout');
+              } catch (err) {
+                setError('Failed to validate cart');
+                console.error('Error validating cart:', err);
+              }
+            }}
             disabled={isEmpty || hasUnavailableItems}
             className="checkout-btn"
           >
-            Proceed to Checkout
+            {isEmpty ? 'Cart is Empty' : hasUnavailableItems ? 'Check Availability' : 'Proceed to Checkout'}
           </Button>
 
           <Button

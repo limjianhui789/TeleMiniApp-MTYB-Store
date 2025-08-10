@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Product, ProductCategory, ProductFilters } from '../../types';
 import { productService, categoryService } from '../../services/product';
 import { cartService } from '../../services/product';
@@ -12,6 +13,7 @@ interface ProductsPageProps {
 }
 
 export const ProductsPage: React.FC<ProductsPageProps> = ({ onProductSelect, initialCategory }) => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +87,10 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onProductSelect, ini
     }
   };
 
+  const handleViewCart = () => {
+    navigate('/cart');
+  };
+
   const handleCategoryFilter = (category: ProductCategory | undefined) => {
     setFilters(prev => {
       const newFilters = { ...prev };
@@ -145,11 +151,6 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onProductSelect, ini
 
   return (
     <div className="products-page">
-      {/* Header */}
-      <div className="products-page__header">
-        <h1 className="products-page__title">Products</h1>
-        <p className="products-page__subtitle">Discover our digital goods and services</p>
-      </div>
 
       {/* Search and Filters */}
       <div className="products-page__filters">
@@ -243,6 +244,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onProductSelect, ini
               key={product.id}
               product={product}
               onAddToCart={handleAddToCart}
+              onViewCart={handleViewCart}
               onViewDetails={onProductSelect}
               isInCart={cartItems.includes(product.id)}
             />
@@ -284,23 +286,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onProductSelect, ini
           text-align: center;
         }
 
-        .products-page__header {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
 
-        .products-page__title {
-          font-size: 2rem;
-          font-weight: 700;
-          margin: 0 0 0.5rem 0;
-          color: var(--tg-theme-text-color, #000);
-        }
-
-        .products-page__subtitle {
-          font-size: 1rem;
-          color: var(--tg-theme-hint-color, #666);
-          margin: 0;
-        }
 
         .products-page__filters {
           background: var(--tg-theme-secondary-bg-color, #f8f9fa);

@@ -36,6 +36,9 @@ const OrderDetailPage = lazy(() =>
 const CartPageEnhanced = lazy(() =>
   import('@/pages/CartPage/CartPageEnhanced').then(m => ({ default: m.CartPageEnhanced }))
 );
+const CheckoutPage = lazy(() =>
+  import('@/pages/CheckoutPage/CheckoutPage').then(m => ({ default: m.CheckoutPage }))
+);
 const ProductDetailPage = lazy(() =>
   import('@/pages/ProductDetailPage/ProductDetailPage').then(m => ({
     default: m.ProductDetailPage,
@@ -70,7 +73,7 @@ const withSuspense = (Component: React.LazyExoticComponent<any>) => {
             height: '50vh',
           }}
         >
-          <LoadingSpinner size="lg" />
+          <LoadingSpinner size="large" />
         </div>
       }
     >
@@ -96,6 +99,7 @@ export const routes: Route[] = [
     title: 'Product Details',
   },
   { path: '/cart', Component: withSuspense(CartPageEnhanced), title: 'Shopping Cart' },
+  { path: '/checkout', Component: withSuspense(CheckoutPage), title: 'Checkout' },
   {
     path: '/payment/success',
     Component: withSuspense(PaymentSuccessPage),
