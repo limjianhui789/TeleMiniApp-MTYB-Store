@@ -3,7 +3,6 @@
 // ============================================================================
 
 module.exports = {
-  preset: 'ts-jest',
   testEnvironment: 'jsdom',
 
   // Root directory
@@ -26,21 +25,12 @@ module.exports = {
   // Setup files
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
 
-  // Support for Vite/ESM imports in Jest
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
-  },
-
   // Transform configuration
   transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: 'tsconfig.json',
-    }],
-    '^.+\\.(js|jsx)$': 'babel-jest',
+    '^.+\\.(ts|tsx|js|jsx)$': 'babel-jest',
   },
+
+  transformIgnorePatterns: [],
 
   // File extensions to consider
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
