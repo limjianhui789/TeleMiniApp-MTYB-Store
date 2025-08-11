@@ -153,10 +153,12 @@ export class CSRFProtection {
    */
   static createProtectedFetch(userId?: string) {
     return async (url: string, options: RequestInit = {}): Promise<Response> => {
-      const headers = this.addTokenToRequest(
-        (options.headers as Record<string, string>) || {},
-        userId
-      );
+      const method = options.method?.toUpperCase() || 'GET';
+      let headers = (options.headers as Record<string, string>) || {};
+
+      if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+        headers = this.addTokenToRequest(headers, userId);
+      }
 
       return fetch(url, {
         ...options,
